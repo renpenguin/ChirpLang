@@ -48,6 +48,7 @@ tokenise :: proc(input: string) -> [dynamic]Token {
 		// Handle new lines
 		if c == '\n' || c == ';' {
 			append_new_line(&tokens)
+			continue
 		} else if len(tokens) > 0 {
 			// If immediately after { and not newline, add a newline first
 			previous_token, was_bracket := tokens[len(tokens) - 1].(Bracket)
@@ -114,7 +115,7 @@ tokenise :: proc(input: string) -> [dynamic]Token {
 			append(&tokens, Bracket{.Curly, .Closing})
 
 		case:
-			fmt.println("unexpected token!")
+			fmt.println("unexpected token!", c)
 		}
 	}
 
