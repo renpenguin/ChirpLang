@@ -5,11 +5,6 @@ import "core:strings"
 import "core:unicode"
 import "core:unicode/utf8"
 
-@(private)
-MAX_ALLOWED_NEWLINES :: 2
-
-Keyword :: distinct string // TODO: expand into a union of enum of built in keywords like `for` and `forever`, and for accessing functions/variables
-
 Bracket :: struct {
 	type:  enum {
 		Round, // Used for calling/defining functions, order of operations (expressions)
@@ -82,25 +77,8 @@ tokenise_next_char :: proc(tokens: ^TokenStream, input_chars: []rune, char_index
 	}
 
 	// Keywords
-	if unicode.is_letter(c) {
-		keyword_runes: [dynamic]rune
-		defer delete(keyword_runes)
-
-		append(&keyword_runes, c)
-
-		for j := i + 1; j < len(input_chars); j += 1 {
-			c := input_chars[j]
-			if unicode.is_letter(c) || unicode.is_number(c) || c == '_' || c == ':' {
-				append(&keyword_runes, c)
-				if c == '=' {
-				}
-				char_index^ += 1
-			} else {
-				break
-			}
-		}
-
-		append(tokens, Keyword(utf8.runes_to_string(keyword_runes[:])))
+	if keyword, ok := try_parse_keyword(input_chars, char_index); ok {
+		append(tokens, keyword)
 		return
 	}
 

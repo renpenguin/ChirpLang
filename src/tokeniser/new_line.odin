@@ -1,5 +1,8 @@
 package tokeniser
 
+@(private)
+MAX_ALLOWED_NEWLINES :: 2
+
 NewLineType :: struct {
 	count: uint,
 }

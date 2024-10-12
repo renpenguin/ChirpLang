@@ -1,11 +1,11 @@
 package format
 
+import t "../tokeniser"
 import "core:fmt"
 import "core:strings"
 import "core:unicode/utf8"
-import t "../tokeniser"
 
-@private
+@(private)
 write_bracket :: proc(
 	sb: ^strings.Builder,
 	previous_token: t.Token,
@@ -27,7 +27,8 @@ write_bracket :: proc(
 	strings.write_rune(sb, bracket_to_rune(bracket))
 }
 
-format :: proc(tokens: []t.Token) -> string {
+// Parses the token stream back into a human-readable string
+format :: proc(tokens: t.TokenStream) -> string {
 	using t
 	sb := strings.builder_make()
 
@@ -43,7 +44,16 @@ format :: proc(tokens: []t.Token) -> string {
 		case Keyword:
 			_, was_keyword := previous_token.(Keyword)
 			if was_keyword do strings.write_rune(&sb, ' ')
-			strings.write_string(&sb, string(token.(Keyword)))
+
+			keyword := token.(Keyword)
+			switch _ in keyword {
+			case BuiltInKeyword:
+				builtin_keyword := builtin_keyword_to_string(keyword.(BuiltInKeyword))
+				strings.write_string(&sb, builtin_keyword)
+				defer delete(builtin_keyword)
+			case CustomKeyword:
+				strings.write_string(&sb, string(keyword.(CustomKeyword)))
+			}
 
 		case Bracket:
 			write_bracket(&sb, previous_token, &indent, token.(Bracket))
@@ -54,9 +64,7 @@ format :: proc(tokens: []t.Token) -> string {
 			case bool:
 				strings.write_string(&sb, literal.(bool) ? "true" : "false")
 			case string:
-				strings.write_rune(&sb, '"')
-				strings.write_string(&sb, literal.(string))
-				strings.write_rune(&sb, '"')
+				strings.write_quoted_string(&sb, literal.(string))
 			case int:
 				strings.write_int(&sb, literal.(int))
 			case float:

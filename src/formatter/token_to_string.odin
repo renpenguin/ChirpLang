@@ -1,5 +1,7 @@
 package format
 
+import "core:fmt"
+import "core:strings"
 import t "../tokeniser"
 
 operator_to_string :: proc(op: t.Operator) -> string {
@@ -25,6 +27,14 @@ operator_to_string :: proc(op: t.Operator) -> string {
 	}
 
 	panic("Unreachable")
+}
+
+builtin_keyword_to_string :: proc(keyword: t.BuiltInKeyword) -> string {
+	if keyword == .FString do return strings.clone("f")
+
+	formatted := fmt.aprint(keyword)
+	defer delete(formatted)
+	return strings.to_lower(formatted)
 }
 
 bracket_to_rune :: proc(bracket: t.Bracket) -> rune {
