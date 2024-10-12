@@ -20,16 +20,17 @@ try_match_to_literal :: proc(
 	literal: Literal,
 	ok: bool,
 ) {
-	i := char_index^
-	c := input_chars[i]
+	c := input_chars[char_index^]
 
 	// Boolean literals
 	// TODO: runes_to_string is leaking memory here. fix later
-	if (len(input_chars) - i) > 4 && utf8.runes_to_string(input_chars[i:][:5]) == "false" {
+	if (len(input_chars) - char_index^) > 4 &&
+	   utf8.runes_to_string(input_chars[char_index^:][:5]) == "false" {
 		char_index^ += 4
 		return false, true
 	}
-	if (len(input_chars) - i) > 3 && utf8.runes_to_string(input_chars[i:][:4]) == "true" {
+	if (len(input_chars) - char_index^) > 3 &&
+	   utf8.runes_to_string(input_chars[char_index^:][:4]) == "true" {
 		char_index^ += 3
 		return true, true
 	}
@@ -39,7 +40,7 @@ try_match_to_literal :: proc(
 		string_runes: [dynamic]rune
 		defer delete(string_runes)
 
-		collect_runes: for j := i + 1; j < len(input_chars); j += 1 {
+		collect_runes: for j := char_index^ + 1; j < len(input_chars); j += 1 {
 			c := input_chars[j]
 			char_index^ += 1
 
@@ -72,13 +73,12 @@ try_match_to_number :: proc(
 	literal: Literal,
 	ok: bool,
 ) {
-	i := char_index^
-	c := input_chars[i]
+	c := input_chars[char_index^]
 
 	if unicode.is_number(c) {
 		number_literal := int(c) - 48
 
-		for j := i + 1; j < len(input_chars); j += 1 {
+		for j := char_index^ + 1; j < len(input_chars); j += 1 {
 			c := input_chars[j]
 			if !unicode.is_number(c) do break
 
@@ -86,14 +86,14 @@ try_match_to_number :: proc(
 			number_literal += (int(c) - 48) // Unicode offset
 			char_index^ += 1
 		}
-		if (i + 1) >= len(input_chars) do return Literal(number_literal), true // EOF
-		if input_chars[i + 1] != '.' do return Literal(number_literal), true // Guard for float parsing
+		if (char_index^ + 1) >= len(input_chars) do return Literal(number_literal), true // EOF
+		if input_chars[char_index^ + 1] != '.' do return Literal(number_literal), true // Guard for float parsing
 
 		// Float
 		char_index^ += 1
 		float_literal := float(number_literal)
 		multiplier := 1.0
-		for j := i + 1; j < len(input_chars); j += 1 {
+		for j := char_index^ + 1; j < len(input_chars); j += 1 {
 			c := input_chars[j]
 			if !unicode.is_number(c) do break
 

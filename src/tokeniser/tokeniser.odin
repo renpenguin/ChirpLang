@@ -48,8 +48,7 @@ tokenise :: proc(input: string) -> (tokens: TokenStream) {
 
 @(private)
 tokenise_next_char :: proc(tokens: ^TokenStream, input_chars: []rune, char_index: ^int) {
-	i := char_index^
-	c := input_chars[i]
+	c := input_chars[char_index^]
 	// Ignore whitespace
 	if strings.is_space(c) && c != '\n' do return
 
