@@ -30,15 +30,19 @@ operator_to_string :: proc(op: t.Operator) -> string {
 	panic("Unreachable")
 }
 
-write_bracket :: proc(builder: ^strings.Builder, previous_token: t.Token, indent: ^int, bracket: t.Bracket) {
+write_bracket :: proc(
+	builder: ^strings.Builder,
+	previous_token: t.Token,
+	indent: ^int,
+	bracket: t.Bracket,
+) {
 	if bracket.state == .Opening {
 		indent^ += 1
 
 		switch bracket.type {
 			case .Round: strings.write_rune(builder, '(')
 			case .Square: strings.write_rune(builder, '[')
-			case .Curly:
-				strings.write_string(builder, " {")
+			case .Curly: strings.write_string(builder, " {")
 		}
 	} else {
 		indent^ -= 1
@@ -65,7 +69,7 @@ tokens_to_string :: proc(tokens: []t.Token) -> string {
 			strings.write_rune(&sb, ' ')
 			strings.write_string(&sb, operator_to_string(token.(Operator)))
 			strings.write_rune(&sb, ' ')
-		
+
 		case Keyword:
 			_, was_keyword := previous_token.(Keyword)
 			if was_keyword do strings.write_rune(&sb, ' ')
@@ -77,19 +81,19 @@ tokens_to_string :: proc(tokens: []t.Token) -> string {
 		case Literal:
 			literal := token.(Literal)
 			switch _ in literal {
-				case string:
-					strings.write_rune(&sb, '"')
-					strings.write_string(&sb, literal.(string))
-					strings.write_rune(&sb, '"')
-				case int:
-					strings.write_int(&sb, literal.(int))
+			case string:
+				strings.write_rune(&sb, '"')
+				strings.write_string(&sb, literal.(string))
+				strings.write_rune(&sb, '"')
+			case int:
+				strings.write_int(&sb, literal.(int))
 			}
 
 		case CommaType:
 			strings.write_string(&sb, ", ")
 
 		case NewLineType:
-			for i : uint = 0; i < token.(NewLineType).count; i += 1 {
+			for i: uint = 0; i < token.(NewLineType).count; i += 1 {
 				strings.write_rune(&sb, '\n')
 			}
 			for i := 0; i < indent; i += 1 {

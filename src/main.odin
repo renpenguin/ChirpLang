@@ -1,7 +1,7 @@
 package main
 
-import "tokeniser"
 import "core:fmt"
+import "tokeniser"
 
 main :: proc() {
 	tokens := tokeniser.tokenise(#load("../examples/hello_world.lc", string))

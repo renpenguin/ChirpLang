@@ -17,7 +17,7 @@ Bracket :: struct {
 	},
 	state: enum {
 		Opening,
-		Closing,NewLineType
+		Closing,
 	},
 }
 

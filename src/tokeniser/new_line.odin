@@ -2,9 +2,9 @@ package tokeniser
 
 NewLineType :: struct {
 	count: uint,
-} 	// unique zero-sided type
+}
 
-NewLine :: NewLineType{1} // shorthand to avoid having to add braces every time i want to define a comma
+NewLine :: NewLineType{1} // shorthand to avoid having to specify the count every time i want to indicate a newline
 
 append_new_line :: proc(tokens: ^[dynamic]Token) {
 	previous_token, was_new_line := tokens[len(tokens) - 1].(NewLineType)
