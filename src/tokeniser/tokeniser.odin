@@ -84,14 +84,20 @@ tokenise_next_char :: proc(tokens: ^TokenStream, input_chars: []rune, char_index
 
 	switch c {
 	// Comma
-	case ',': append(tokens, Comma)
+	case ',':
+		append(tokens, Comma)
 
 	// Brackets
-	case '(': append(tokens, Bracket{.Round, .Opening})
-	case ')': append(tokens, Bracket{.Round, .Closing})
-	case '[': append(tokens, Bracket{.Square, .Opening})
-	case ']': append(tokens, Bracket{.Square, .Closing})
-	case '{': append(tokens, Bracket{.Curly, .Opening})
+	case '(':
+		append(tokens, Bracket{.Round, .Opening})
+	case ')':
+		append(tokens, Bracket{.Round, .Closing})
+	case '[':
+		append(tokens, Bracket{.Square, .Opening})
+	case ']':
+		append(tokens, Bracket{.Square, .Closing})
+	case '{':
+		append(tokens, Bracket{.Curly, .Opening})
 	case '}':
 		// If no newline before }, add a newline first
 		_, was_bracket := tokens[len(tokens) - 1].(NewLineType)

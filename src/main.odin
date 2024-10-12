@@ -1,9 +1,9 @@
 package main
 
 import "core:fmt"
-import "tokeniser"
-import "formatter"
 import "core:mem"
+import "formatter"
+import "tokeniser"
 
 main :: proc() {
 	when ODIN_DEBUG {
@@ -31,10 +31,10 @@ main :: proc() {
 	tokens := tokeniser.tokenise(#load("../examples/hello_world.lc", string))
 	defer tokeniser.destroy_token_stream(tokens)
 
-	fmt.println("------------- Loaded tokens:")
+	fmt.println("=== Loaded tokens: ===")
 	fmt.println(tokens)
-	fmt.println("------------- Parsed text as:")
-	parsed_string := formatter.format(tokens[:])
+	fmt.println("=== Parsed text as: ===")
+	parsed_string := formatter.format(tokens)
 	defer delete(parsed_string)
 	fmt.println(parsed_string)
 }

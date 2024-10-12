@@ -25,7 +25,7 @@ Operator :: enum {
 @(private)
 try_match_to_assignable_operator :: proc(
 	input_chars: []rune,
-	i: ^int,
+	char_index: ^int,
 ) -> (
 	found_operator: Operator,
 	ok: bool,
@@ -45,10 +45,10 @@ try_match_to_assignable_operator :: proc(
 	defer delete(operators_with_possible_trailing_equals)
 
 	for key, value in operators_with_possible_trailing_equals {
-		if input_chars[i^] == key {
+		if input_chars[char_index^] == key {
 			ok = true
-			if i^ + 1 < len(input_chars) && input_chars[i^ + 1] == '=' {
-				i^ += 1
+			if char_index^ + 1 < len(input_chars) && input_chars[char_index^ + 1] == '=' {
+				char_index^ += 1
 				found_operator = value.assign_op
 			} else {
 				found_operator = value.default_op

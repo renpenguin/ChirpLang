@@ -23,7 +23,7 @@ Keyword :: distinct union {
 }
 
 // Parses and returns a keyword from the string
-try_parse_keyword :: proc(input_chars: []rune, char_index: ^int,) -> (keyword: Keyword, ok: bool) {
+try_parse_keyword :: proc(input_chars: []rune, char_index: ^int) -> (keyword: Keyword, ok: bool) {
 	c := input_chars[char_index^]
 	if !unicode.is_letter(c) do return nil, false
 
@@ -56,18 +56,23 @@ try_parse_keyword :: proc(input_chars: []rune, char_index: ^int,) -> (keyword: K
 
 // Attempts to map the input `CustomKeyword` to a `BuiltInKeyword`
 @(private)
-try_match_to_builtin_keyword :: proc(custom_keyword: CustomKeyword) -> (keyword: BuiltInKeyword, ok: bool) {
+try_match_to_builtin_keyword :: proc(
+	custom_keyword: CustomKeyword,
+) -> (
+	keyword: BuiltInKeyword,
+	ok: bool,
+) {
 	keyword = nil
 	switch custom_keyword {
-		case "import": keyword = .Import
-		case "func": keyword = .Func
-		case "var": keyword = .Var
-		case "if": keyword = .If
-		case "else": keyword = .Else
-		case "for": keyword = .For
-		case "while": keyword = .While
-		case "forever": keyword = .Forever
-		case "f": keyword = .FString
+	case "import": keyword = .Import
+	case "func": keyword = .Func
+	case "var": keyword = .Var
+	case "if": keyword = .If
+	case "else": keyword = .Else
+	case "for": keyword = .For
+	case "while": keyword = .While
+	case "forever": keyword = .Forever
+	case "f": keyword = .FString
 	}
 
 	ok = (keyword != nil)

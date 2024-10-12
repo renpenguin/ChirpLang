@@ -13,17 +13,24 @@ Literal :: union #no_nil {
 }
 
 @(private)
-try_match_to_literal :: proc(input_chars: []rune, i: ^int) -> (literal: Literal, ok: bool) {
-	c := input_chars[i^]
+try_match_to_literal :: proc(
+	input_chars: []rune,
+	char_index: ^int,
+) -> (
+	literal: Literal,
+	ok: bool,
+) {
+	i := char_index^
+	c := input_chars[i]
 
 	// Boolean literals
 	// TODO: runes_to_string is leaking memory here. fix later
-	if (len(input_chars) - i^) > 4 && utf8.runes_to_string(input_chars[i^:i^ + 5]) == "false" {
-		i^ += 4
+	if (len(input_chars) - i) > 4 && utf8.runes_to_string(input_chars[i:][:5]) == "false" {
+		char_index^ += 4
 		return false, true
 	}
-	if (len(input_chars) - i^) > 3 && utf8.runes_to_string(input_chars[i^:i^ + 4]) == "true" {
-		i^ += 3
+	if (len(input_chars) - i) > 3 && utf8.runes_to_string(input_chars[i:][:4]) == "true" {
+		char_index^ += 3
 		return true, true
 	}
 
@@ -32,15 +39,15 @@ try_match_to_literal :: proc(input_chars: []rune, i: ^int) -> (literal: Literal,
 		string_runes: [dynamic]rune
 		defer delete(string_runes)
 
-		collect_runes: for j := i^ + 1; j < len(input_chars); j += 1 {
+		collect_runes: for j := i + 1; j < len(input_chars); j += 1 {
 			c := input_chars[j]
-			i^ += 1
+			char_index^ += 1
 
 			switch c {
 			case '"', '\'':
 				break collect_runes
 			case '\\':
-				i^ += 1
+				char_index^ += 1
 				j += 1
 				append(&string_runes, input_chars[j])
 			case:
@@ -52,38 +59,45 @@ try_match_to_literal :: proc(input_chars: []rune, i: ^int) -> (literal: Literal,
 	}
 
 	// Number literals
-	if literal, ok = try_match_to_number(input_chars, i); ok do return
+	if literal, ok = try_match_to_number(input_chars, char_index); ok do return
 
 	return
 }
 
 @(private = "file")
-try_match_to_number :: proc(input_chars: []rune, i: ^int) -> (literal: Literal, ok: bool) {
-	c := input_chars[i^]
+try_match_to_number :: proc(
+	input_chars: []rune,
+	char_index: ^int,
+) -> (
+	literal: Literal,
+	ok: bool,
+) {
+	i := char_index^
+	c := input_chars[i]
 
 	if unicode.is_number(c) {
 		number_literal := int(c) - 48
 
-		for j := i^ + 1; j < len(input_chars); j += 1 {
+		for j := i + 1; j < len(input_chars); j += 1 {
 			c := input_chars[j]
 			if !unicode.is_number(c) do break
 
 			number_literal *= 10
 			number_literal += (int(c) - 48) // Unicode offset
-			i^ += 1
+			char_index^ += 1
 		}
-		if (i^ + 1) >= len(input_chars) do return Literal(number_literal), true // EOF
-		if input_chars[i^ + 1] != '.' do return Literal(number_literal), true // Guard for float parsing
+		if (i + 1) >= len(input_chars) do return Literal(number_literal), true // EOF
+		if input_chars[i + 1] != '.' do return Literal(number_literal), true // Guard for float parsing
 
 		// Float
-		i^ += 1
+		char_index^ += 1
 		float_literal := float(number_literal)
 		multiplier := 1.0
-		for j := i^ + 1; j < len(input_chars); j += 1 {
+		for j := i + 1; j < len(input_chars); j += 1 {
 			c := input_chars[j]
 			if !unicode.is_number(c) do break
 
-			i^ += 1
+			char_index^ += 1
 			multiplier /= 10
 			float_literal += multiplier * float(int(c) - 48) // Unicode offset
 		}
