@@ -3,8 +3,9 @@ package main
 import "core:fmt"
 import "core:strings"
 import "core:unicode/utf8"
+import t "tokeniser"
 
-operator_to_string :: proc(op: Operator) -> string {
+operator_to_string :: proc(op: t.Operator) -> string {
 	switch op {
 		case .Add: return "+"
 		case .AddAssign: return "+="
@@ -29,7 +30,7 @@ operator_to_string :: proc(op: Operator) -> string {
 	panic("Unreachable")
 }
 
-write_bracket :: proc(builder: ^strings.Builder, previous_token: Token, indent: ^int, bracket: Bracket) {
+write_bracket :: proc(builder: ^strings.Builder, previous_token: t.Token, indent: ^int, bracket: t.Bracket) {
 	if bracket.state == .Opening {
 		indent^ += 1
 
@@ -41,7 +42,7 @@ write_bracket :: proc(builder: ^strings.Builder, previous_token: Token, indent: 
 		}
 	} else {
 		indent^ -= 1
-		_, was_new_line := previous_token.(NewLineType)
+		_, was_new_line := previous_token.(t.NewLineType)
 		if was_new_line do strings.pop_rune(builder)
 
 		switch bracket.type {
@@ -52,7 +53,8 @@ write_bracket :: proc(builder: ^strings.Builder, previous_token: Token, indent: 
 	}
 }
 
-tokens_to_string :: proc(tokens: []Token) -> string {
+tokens_to_string :: proc(tokens: []t.Token) -> string {
+	using t
 	sb := strings.builder_make()
 
 	previous_token: Token
@@ -63,12 +65,15 @@ tokens_to_string :: proc(tokens: []Token) -> string {
 			strings.write_rune(&sb, ' ')
 			strings.write_string(&sb, operator_to_string(token.(Operator)))
 			strings.write_rune(&sb, ' ')
+		
 		case Keyword:
 			_, was_keyword := previous_token.(Keyword)
 			if was_keyword do strings.write_rune(&sb, ' ')
 			strings.write_string(&sb, string(token.(Keyword)))
+
 		case Bracket:
 			write_bracket(&sb, previous_token, &indent, token.(Bracket))
+
 		case Literal:
 			literal := token.(Literal)
 			switch _ in literal {
@@ -79,8 +84,10 @@ tokens_to_string :: proc(tokens: []Token) -> string {
 				case int:
 					strings.write_int(&sb, literal.(int))
 			}
+
 		case CommaType:
 			strings.write_string(&sb, ", ")
+
 		case NewLineType:
 			for i : uint = 0; i < token.(NewLineType).count; i += 1 {
 				strings.write_rune(&sb, '\n')

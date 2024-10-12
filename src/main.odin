@@ -1,9 +1,10 @@
 package main
 
+import "tokeniser"
 import "core:fmt"
 
 main :: proc() {
-	tokens := tokenise(#load("../examples/hello_world.lc", string))
+	tokens := tokeniser.tokenise(#load("../examples/hello_world.lc", string))
 	defer delete(tokens)
 
 	fmt.println("------------- Loaded tokens:")
