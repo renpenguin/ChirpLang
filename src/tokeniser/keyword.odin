@@ -12,6 +12,9 @@ BuiltInKeyword :: enum {
 	For,
 	While,
 	Forever,
+	Break,
+	Continue,
+	Return,
 	FString,
 }
 
@@ -63,7 +66,7 @@ try_match_to_builtin_keyword :: proc(
 	ok: bool,
 ) {
 	ok = true
-	
+
 	switch custom_keyword {
 	case "import": keyword = .Import
 	case "func": keyword = .Func
@@ -73,6 +76,9 @@ try_match_to_builtin_keyword :: proc(
 	case "for": keyword = .For
 	case "while": keyword = .While
 	case "forever": keyword = .Forever
+	case "break": keyword = .Break
+	case "continue": keyword = .Continue
+	case "return": keyword = .Return
 	case "f": keyword = .FString
 	case: ok = false
 	}
