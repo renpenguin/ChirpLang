@@ -1,0 +1,14 @@
+import math, random
+
+func main() {
+	print("hi!")
+	var dice_roll = random:range(1,6)
+	print(f"Dice roll: {dice_roll}")
+
+	var num = 0
+	forever {
+		num += 1
+		print(f"Repeated { num } times")
+		print(f"sin({ num }) = { math:sin(num) }")
+	}
+}
