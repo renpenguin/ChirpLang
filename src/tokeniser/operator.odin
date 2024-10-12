@@ -46,7 +46,7 @@ try_match_to_assignable_operator :: proc(
 	for key, value in operators_with_possible_trailing_equals {
 		if input_chars[i^] == key {
 			ok = true
-			if input_chars[i^ + 1] == '=' {
+			if i^ + 1 < len(input_chars) && input_chars[i^ + 1] == '=' {
 				i^ += 1
 				found_operator = value.assign_op
 			} else {

@@ -66,7 +66,8 @@ try_match_to_number :: proc(input_chars: []rune, i: ^int) -> (literal: Literal, 
 			number_literal += (int(c) - 48) // Unicode offset
 			i^ += 1
 		}
-		if input_chars[i^ + 1] != '.' do return Literal(number_literal), true
+		if (i^ + 1) >= len(input_chars) do return Literal(number_literal), true // EOF
+		if input_chars[i^ + 1] != '.' do return Literal(number_literal), true // Guard for float parsing
 
 		// Float
 		i^ += 1
