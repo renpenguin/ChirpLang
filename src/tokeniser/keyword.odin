@@ -62,7 +62,8 @@ try_match_to_builtin_keyword :: proc(
 	keyword: BuiltInKeyword,
 	ok: bool,
 ) {
-	keyword = nil
+	ok = true
+	
 	switch custom_keyword {
 	case "import": keyword = .Import
 	case "func": keyword = .Func
@@ -73,8 +74,8 @@ try_match_to_builtin_keyword :: proc(
 	case "while": keyword = .While
 	case "forever": keyword = .Forever
 	case "f": keyword = .FString
+	case: ok = false
 	}
 
-	ok = (keyword != nil)
 	return
 }
