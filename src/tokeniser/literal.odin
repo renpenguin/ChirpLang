@@ -32,12 +32,18 @@ try_match_to_literal :: proc(input_chars: []rune, i: ^int) -> (literal: Literal,
 		string_runes: [dynamic]rune
 		defer delete(string_runes)
 
-		for j := i^ + 1; j < len(input_chars); j += 1 {
+		collect_runes: for j := i^ + 1; j < len(input_chars); j += 1 {
 			c := input_chars[j]
 			i^ += 1
-			if c == '"' || c == '\'' { 	// TODO: handle \" and \'
-				break
-			} else {
+
+			switch c {
+			case '"', '\'':
+				break collect_runes
+			case '\\':
+				i^ += 1
+				j += 1
+				append(&string_runes, input_chars[j])
+			case:
 				append(&string_runes, c)
 			}
 		}
