@@ -42,6 +42,7 @@ try_match_to_assignable_operator :: proc(
 		'>' = {.GreaterThan, .GreaterEqual},
 		'<' = {.LessThan, .LessEqual},
 	}
+	defer delete(operators_with_possible_trailing_equals)
 
 	for key, value in operators_with_possible_trailing_equals {
 		if input_chars[i^] == key {

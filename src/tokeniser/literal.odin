@@ -17,6 +17,7 @@ try_match_to_literal :: proc(input_chars: []rune, i: ^int) -> (literal: Literal,
 	c := input_chars[i^]
 
 	// Boolean literals
+	// TODO: runes_to_string is leaking memory here. fix later
 	if (len(input_chars) - i^) > 4 && utf8.runes_to_string(input_chars[i^:i^ + 5]) == "false" {
 		i^ += 4
 		return false, true

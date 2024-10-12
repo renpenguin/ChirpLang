@@ -40,6 +40,7 @@ tokenise :: proc(input: string) -> [dynamic]Token {
 	tokens: [dynamic]Token
 
 	input_chars := utf8.string_to_runes(strings.trim_space(input))
+	defer delete(input_chars)
 
 	for i := 0; i < len(input_chars); i += 1 {
 		tokenise_next_char(&tokens, input_chars, &i)
@@ -104,8 +105,8 @@ tokenise_next_char :: proc(tokens: ^[dynamic]Token, input_chars: []rune, char_in
 		return
 	}
 
-	// Brackets and comma
 	switch c {
+	// Comma
 	case ',': append(tokens, Comma)
 
 	// Brackets
