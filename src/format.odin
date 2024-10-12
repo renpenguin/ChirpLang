@@ -81,6 +81,8 @@ tokens_to_string :: proc(tokens: []t.Token) -> string {
 		case Literal:
 			literal := token.(Literal)
 			switch _ in literal {
+			case bool:
+				strings.write_string(&sb, literal.(bool) ? "true" : "false")
 			case string:
 				strings.write_rune(&sb, '"')
 				strings.write_string(&sb, literal.(string))

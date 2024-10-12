@@ -4,12 +4,23 @@ import "core:unicode"
 import "core:unicode/utf8"
 
 Literal :: union #no_nil {
+	bool,
 	string,
 	int,
 }
 
 try_match_to_literal :: proc(input_chars: []rune, i: ^int) -> (literal: Literal, ok: bool) {
 	c := input_chars[i^]
+
+	// Boolean literals
+	if (len(input_chars) - i^) > 4 && utf8.runes_to_string(input_chars[i^:i^ + 5]) == "false" {
+		i^ += 4
+		return false, true
+	}
+	if (len(input_chars) - i^) > 3 && utf8.runes_to_string(input_chars[i^:i^ + 4]) == "true" {
+		i^ += 3
+		return true, true
+	}
 
 	// String literals
 	if c == '"' || c == '\'' {

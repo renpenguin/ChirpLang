@@ -58,6 +58,18 @@ tokenise :: proc(input: string) -> [dynamic]Token {
 			}
 		}
 
+		literal, matched_lit := try_match_to_literal(input_chars, &i)
+		if matched_lit {
+			append(&tokens, literal)
+			continue
+		}
+
+		operator, matched_op := try_match_to_assignable_operator(input_chars, &i)
+		if matched_op {
+			append(&tokens, operator)
+			continue
+		}
+
 		// Keywords
 		if unicode.is_letter(c) {
 			keyword_runes: [dynamic]rune
@@ -78,18 +90,6 @@ tokenise :: proc(input: string) -> [dynamic]Token {
 			}
 
 			append(&tokens, Keyword(utf8.runes_to_string(keyword_runes[:])))
-			continue
-		}
-
-		literal, matched_lit := try_match_to_literal(input_chars, &i)
-		if matched_lit {
-			append(&tokens, literal)
-			continue
-		}
-
-		operator, matched_op := try_match_to_assignable_operator(input_chars, &i)
-		if matched_op {
-			append(&tokens, operator)
 			continue
 		}
 
