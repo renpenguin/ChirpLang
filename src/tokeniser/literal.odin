@@ -12,6 +12,7 @@ Literal :: union #no_nil {
 	float,
 }
 
+@(private)
 try_match_to_literal :: proc(input_chars: []rune, i: ^int) -> (literal: Literal, ok: bool) {
 	c := input_chars[i^]
 

@@ -6,6 +6,7 @@ NewLineType :: struct {
 
 NewLine :: NewLineType{1} // shorthand to avoid having to specify the count every time i want to indicate a newline
 
+@(private)
 append_new_line :: proc(tokens: ^[dynamic]Token) {
 	previous_token, was_new_line := tokens[len(tokens) - 1].(NewLineType)
 	if !was_new_line {
@@ -16,6 +17,7 @@ append_new_line :: proc(tokens: ^[dynamic]Token) {
 	}
 }
 
+@(private)
 smart_pop :: proc(tokens: ^[dynamic]Token) {
 	previous_token, was_new_line := tokens[len(tokens) - 1].(NewLineType)
 	if !was_new_line || previous_token.count == 1 {

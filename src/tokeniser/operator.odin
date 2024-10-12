@@ -22,6 +22,7 @@ Operator :: enum {
 }
 
 // Attempts to match the present runes to an operator, checking for a trailing `=`
+@(private)
 try_match_to_assignable_operator :: proc(
 	input_chars: []rune,
 	i: ^int,

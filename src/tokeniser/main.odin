@@ -5,6 +5,7 @@ import "core:strings"
 import "core:unicode"
 import "core:unicode/utf8"
 
+@private
 MAX_ALLOWED_NEWLINES :: 2
 
 Keyword :: distinct string // TODO: expand into a union of enum of built in keywords like `for` and `forever`, and for accessing functions/variables
