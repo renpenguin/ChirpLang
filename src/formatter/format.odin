@@ -1,37 +1,13 @@
-package main
+package format
 
 import "core:fmt"
 import "core:strings"
 import "core:unicode/utf8"
-import t "tokeniser"
+import t "../tokeniser"
 
-operator_to_string :: proc(op: t.Operator) -> string {
-	switch op {
-		case .Add: return "+"
-		case .AddAssign: return "+="
-		case .Sub: return "-"
-		case .SubAssign: return "-="
-		case .Mul: return "*"
-		case .MulAssign: return "="
-		case .Div: return "/"
-		case .DivAssign: return "/="
-		case .And: return "and"
-		case .Or: return "or"
-		case .Not: return "!"
-		case .NotEqual: return "!="
-		case .Assign: return "="
-		case .IsEqual: return "=="
-		case .GreaterThan: return ">"
-		case .GreaterEqual: return ">="
-		case .LessThan: return "<"
-		case .LessEqual: return "<="
-	}
-
-	panic("Unreachable")
-}
-
+@private
 write_bracket :: proc(
-	builder: ^strings.Builder,
+	sb: ^strings.Builder,
 	previous_token: t.Token,
 	indent: ^int,
 	bracket: t.Bracket,
@@ -39,25 +15,19 @@ write_bracket :: proc(
 	if bracket.state == .Opening {
 		indent^ += 1
 
-		switch bracket.type {
-			case .Round: strings.write_rune(builder, '(')
-			case .Square: strings.write_rune(builder, '[')
-			case .Curly: strings.write_string(builder, " {")
+		if bracket.type == .Curly {
+			strings.write_rune(sb, ' ')
 		}
 	} else {
 		indent^ -= 1
 		_, was_new_line := previous_token.(t.NewLineType)
-		if was_new_line do strings.pop_rune(builder)
-
-		switch bracket.type {
-			case .Round: strings.write_rune(builder, ')')
-			case .Square: strings.write_rune(builder,  ']')
-			case .Curly: strings.write_rune(builder, '}')
-		}
+		if was_new_line do strings.pop_rune(sb)
 	}
+
+	strings.write_rune(sb, bracket_to_rune(bracket))
 }
 
-tokens_to_string :: proc(tokens: []t.Token) -> string {
+format :: proc(tokens: []t.Token) -> string {
 	using t
 	sb := strings.builder_make()
 
