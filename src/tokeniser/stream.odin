@@ -1,6 +1,8 @@
 package tokeniser
 
-tokenstream_delete :: proc(tokens: [dynamic]Token) {
+TokenStream :: distinct [dynamic]Token
+
+destroy_token_stream :: proc(tokens: TokenStream) {
 	for token in tokens {
 		#partial switch _ in token {
 			case Keyword:

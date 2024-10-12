@@ -29,7 +29,7 @@ main :: proc() {
 	}
 
 	tokens := tokeniser.tokenise(#load("../examples/hello_world.lc", string))
-	defer tokeniser.tokenstream_delete(tokens)
+	defer tokeniser.destroy_token_stream(tokens)
 
 	fmt.println("------------- Loaded tokens:")
 	fmt.println(tokens)
