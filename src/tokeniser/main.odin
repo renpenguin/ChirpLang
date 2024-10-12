@@ -5,14 +5,14 @@ import "core:strings"
 import "core:unicode"
 import "core:unicode/utf8"
 
-@private
+@(private)
 MAX_ALLOWED_NEWLINES :: 2
 
 Keyword :: distinct string // TODO: expand into a union of enum of built in keywords like `for` and `forever`, and for accessing functions/variables
 
 Bracket :: struct {
 	type:  enum {
-		Round, // Used for calling/defining functions, order of operations,
+		Round, // Used for calling/defining functions, order of operations (expressions)
 		Square, // Used to define and access arrays
 		Curly, // Used for function/if/loop scope and struct/enum definitions
 	},
@@ -59,23 +59,21 @@ tokenise_next_char :: proc(tokens: ^[dynamic]Token, input_chars: []rune, char_in
 		return
 	} else if len(tokens) > 0 {
 		// If immediately after { and not newline, add a newline first
-		previous_token, was_bracket := tokens[len(tokens) - 1].(Bracket)
+		bracket, was_bracket := tokens[len(tokens) - 1].(Bracket)
 		if was_bracket {
-			if (previous_token == Bracket{.Curly, .Opening}) {
+			if (bracket == Bracket{.Curly, .Opening}) {
 				append_new_line(tokens)
 			}
 		}
 	}
 
-	literal, matched_lit := try_match_to_literal(input_chars, char_index)
-	if matched_lit {
+	if literal, ok := try_match_to_literal(input_chars, char_index); ok {
 		append(tokens, literal)
 		return
 	}
 
-	operator, matched_op := try_match_to_assignable_operator(input_chars, char_index)
-	if matched_op {
-		append(tokens, operator)
+	if op, ok := try_match_to_assignable_operator(input_chars, char_index); ok {
+		append(tokens, op)
 		return
 	}
 
@@ -104,8 +102,7 @@ tokenise_next_char :: proc(tokens: ^[dynamic]Token, input_chars: []rune, char_in
 
 	// Brackets and comma
 	switch c {
-	case ',':
-		append(tokens, Comma)
+	case ',': append(tokens, Comma)
 
 	// Brackets
 	case '(': append(tokens, Bracket{.Round, .Opening})

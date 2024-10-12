@@ -45,8 +45,7 @@ try_match_to_literal :: proc(input_chars: []rune, i: ^int) -> (literal: Literal,
 	}
 
 	// Number literals
-	literal, ok = try_match_to_number(input_chars, i)
-	if ok do return
+	if literal, ok = try_match_to_number(input_chars, i); ok do return
 
 	return
 }
