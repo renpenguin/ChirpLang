@@ -39,10 +39,14 @@ Token :: union #no_nil {
 tokenise :: proc(input: string) -> [dynamic]Token {
 	tokens: [dynamic]Token
 
-	input_chars := utf8.string_to_runes(input)
+	input_chars := utf8.string_to_runes(strings.trim_space(input))
+
 	for i := 0; i < len(input_chars); i += 1 {
 		tokenise_next_char(&tokens, input_chars, &i)
 	}
+
+	// Every tokenstream should end with one trailing new line
+	append(&tokens, NewLine)
 
 	return tokens
 }
