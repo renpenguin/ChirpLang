@@ -89,6 +89,8 @@ tokens_to_string :: proc(tokens: []t.Token) -> string {
 				strings.write_rune(&sb, '"')
 			case int:
 				strings.write_int(&sb, literal.(int))
+			case float:
+				strings.write_f64(&sb, literal.(float), 'g')
 			}
 
 		case CommaType:
