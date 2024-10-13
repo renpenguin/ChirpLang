@@ -32,18 +32,15 @@ main :: proc() {
 	tokens := tokeniser.tokenise(#load("../examples/hello_world.lc", string))
 	defer tokeniser.destroy_token_stream(tokens)
 
-	fmt.println("=== Tokenised: ===")
-	fmt.println(tokens)
-
 	block, err := parser.parse(tokens)
 	if !err.ok {
 		if found, ok := err.found.?; ok {
-			fmt.println("Error while parsing: ", err.error_msg, ", found ", found, sep = "")
+			fmt.eprintln("Error while parsing: ", err.error_msg, ", found ", found, sep = "")
 		} else {
-			fmt.println("Error while parsing: ", err.error_msg, sep = "")
+			fmt.eprintln("Error while parsing: ", err.error_msg, sep = "")
 		}
 	}
 
 	fmt.println("\n=== Parsed: ===")
-	render_block(block)
+	formatter.display_block(block)
 }

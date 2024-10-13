@@ -1,9 +1,10 @@
-package main
+package formatter
 
 import "core:fmt"
-import "parser"
+import "../parser"
 
-render_block :: proc(block: parser.Block, indent := 0) {
+// Prints a `parser.Block` to `stdout` in a pseudo language
+display_block :: proc(block: parser.Block, indent := 0) {
 	using parser
 
 	for instruction in block {
@@ -17,37 +18,38 @@ render_block :: proc(block: parser.Block, indent := 0) {
 		case FunctionDefinition:
 			func_def := instruction.(FunctionDefinition)
 			fmt.println("[FuncDef] ", func_def.name, func_def.args, ": ", sep = "")
-			render_block(func_def.block, indent + 1)
+			display_block(func_def.block, indent + 1)
 		case Forever:
 			fmt.println("[Forever]:")
-			render_block(instruction.(Forever).block, indent + 1)
+			display_block(instruction.(Forever).block, indent + 1)
 		case VariableDefinition:
 			var_def := instruction.(VariableDefinition)
 			fmt.print("[VarDef]", var_def.name, "[=] ")
-			render_expression(var_def.expr)
+			display_expression(var_def.expr)
 			fmt.println()
 		case VariableAssignment:
 			var_ass := instruction.(VariableAssignment)
 			fmt.print("[VarAss]", var_ass.target_var, "[", var_ass.operator, "] ")
-			render_expression(var_ass.expr)
+			display_expression(var_ass.expr)
 			fmt.println()
 		case Expression:
 			expr := instruction.(Expression)
 			fmt.print("[Expr] ")
-			render_expression(expr)
+			display_expression(expr)
 			fmt.println()
 		}
 	}
 }
 
-render_expression :: proc(expr: parser.Expression) {
+// Prints a `parser.Expresion` to `stdout` in a human-readable pseudo language
+display_expression :: proc(expr: parser.Expression) {
 	#partial switch _ in expr {
 		case parser.Operation:
 			op := expr.(parser.Operation)
 			fmt.print("Operation{")
-			render_expression(op.left^)
+			display_expression(op.left^)
 			fmt.print(" [",op.op, "] ", sep = "")
-			render_expression(op.right^)
+			display_expression(op.right^)
 			fmt.print("}")
 
 		case parser.FunctionCall:
@@ -55,10 +57,10 @@ render_expression :: proc(expr: parser.Expression) {
 			fmt.print("FunctionCall{ ", func_call.name, ", ", sep = "")
 
 			for arg in func_call.args[:len(func_call.args)-1] {
-				render_expression(arg)
+				display_expression(arg)
 				fmt.print(", ")
 			}
-			render_expression(func_call.args[len(func_call.args)-1])
+			display_expression(func_call.args[len(func_call.args)-1])
 			fmt.print(" }")
 
 		case parser.FormatString:
