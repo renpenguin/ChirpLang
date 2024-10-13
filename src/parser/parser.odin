@@ -6,12 +6,6 @@ import "core:fmt"
 // Block of code delimited by `{}`
 Block :: distinct [dynamic]Statement
 
-ParseError :: struct {
-	error_msg: string,
-	found:     Maybe(t.Token),
-	ok:        bool,
-}
-
 parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 	using t
 	err = ParseError {
@@ -162,59 +156,4 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 	}
 
 	return
-}
-
-capture_block :: proc(
-	tokens: t.TokenStream,
-	token_index: ^int,
-) -> (
-	block: Block,
-	err: ParseError,
-) {
-	err = expect_token(
-		tokens[token_index^],
-		t.Bracket{.Curly, .Opening},
-		"Expected scope to begin with {",
-	)
-	if !err.ok do return
-
-	captured_tokens: t.TokenStream
-	defer delete(captured_tokens)
-	bracket_depth := 1
-
-	for bracket_depth > 0 {
-		token_index^ += 1
-		token := tokens[token_index^]
-		if token == t.Token(t.Bracket{.Curly, .Opening}) do bracket_depth += 1
-		else if token == t.Token(t.Bracket{.Curly, .Closing}) do bracket_depth -= 1
-
-		append(&captured_tokens, token)
-	}
-	pop(&captured_tokens) // Remove last }
-
-	return parse(captured_tokens)
-}
-
-@(require_results)
-expect_custom_keyword :: proc(
-	token: t.Token,
-	error_msg: string,
-) -> (
-	keyword: t.CustomKeyword,
-	err: ParseError,
-) {
-	kw, kw_ok := token.(t.Keyword)
-	if kw_ok {
-		ckw, ckw_ok := kw.(t.CustomKeyword)
-		if ckw_ok {
-			return ckw, ParseError{ok = true}
-		}
-	}
-
-	return t.CustomKeyword(""), ParseError{error_msg = error_msg, found = token}
-}
-
-@(require_results)
-expect_token :: proc(token, expected_token: t.Token, error_msg: string) -> (err: ParseError) {
-	return ParseError{error_msg = error_msg, found = token, ok = token == expected_token}
 }

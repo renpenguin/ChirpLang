@@ -38,3 +38,35 @@ Statement :: union {
 	Forever,
 	Expression,
 }
+
+// Captures a block of statements surrounded by {}. `token_index` should be the index of the first {
+capture_block :: proc(
+	tokens: t.TokenStream,
+	token_index: ^int,
+) -> (
+	block: Block,
+	err: ParseError,
+) {
+	err = expect_token(
+		tokens[token_index^],
+		t.Bracket{.Curly, .Opening},
+		"Expected scope to begin with {",
+	)
+	if !err.ok do return
+
+	captured_tokens: t.TokenStream
+	defer delete(captured_tokens)
+	bracket_depth := 1
+
+	for bracket_depth > 0 {
+		token_index^ += 1
+		token := tokens[token_index^]
+		if token == t.Token(t.Bracket{.Curly, .Opening}) do bracket_depth += 1
+		else if token == t.Token(t.Bracket{.Curly, .Closing}) do bracket_depth -= 1
+
+		append(&captured_tokens, token)
+	}
+	pop(&captured_tokens) // Remove last }
+
+	return parse(captured_tokens)
+}
