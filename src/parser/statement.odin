@@ -40,6 +40,7 @@ Statement :: union {
 }
 
 // Captures a block of statements surrounded by {}. `token_index` should be the index of the first {
+@private
 capture_block :: proc(
 	tokens: t.TokenStream,
 	token_index: ^int,
@@ -73,6 +74,7 @@ capture_block :: proc(
 }
 
 // Try to match an `Import` statement under the cursor
+@private
 try_match_import :: proc(
 	tokens: t.TokenStream,
 	char_index: ^int,
@@ -109,6 +111,7 @@ try_match_import :: proc(
 }
 
 // Try to match a `FunctionDefinition` statement under the cursor
+@private
 try_match_func_definition :: proc(
 	tokens: t.TokenStream,
 	char_index: ^int,
@@ -164,6 +167,7 @@ try_match_func_definition :: proc(
 }
 
 // Try to match a `VariableDefinition` statement under the cursor
+@private
 try_match_var_definition :: proc(
 	tokens: t.TokenStream,
 	char_index: ^int,
@@ -199,6 +203,7 @@ try_match_var_definition :: proc(
 }
 
 // Try to match a `VariableAssignment` statement under the cursor
+@private
 try_match_var_assignment :: proc(
 	tokens: t.TokenStream,
 	char_index: ^int,

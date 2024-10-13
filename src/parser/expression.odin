@@ -26,6 +26,7 @@ Expression :: union {
 }
 
 // Captures all `Token`s until a newline into an `Expression`
+@private
 capture_expression :: proc(
 	tokens: t.TokenStream,
 	token_index: ^int,
@@ -47,6 +48,7 @@ capture_expression :: proc(
 }
 
 // Captures all `Token`s until a newline or comma into an `Expression`. The last value will be true if it was a comma
+@private
 capture_arg_until_closing_bracket :: proc(
 	tokens: t.TokenStream,
 	token_index: ^int,
