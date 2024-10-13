@@ -10,17 +10,10 @@ VariableDefinition :: struct {
 	name: t.CustomKeyword,
 	expr: Expression,
 }
-AssignmentOperator :: enum {
-	Set        = int(t.Operator.Assign),
-	Increment  = int(t.Operator.AddAssign),
-	Decrement  = int(t.Operator.SubAssign),
-	MultiplyBy = int(t.Operator.MulAssign),
-	DivideBy   = int(t.Operator.DivAssign),
-}
 // Operation that either is or ends with `=`. Expected pattern `$name$ $operator$ $expr$;`
 VariableAssignment :: struct {
 	target_variable: t.CustomKeyword,
-	operator:       AssignmentOperator,
+	operator:       t.AssignmentOperator,
 	expr:            Expression,
 }
 // Defines a function. Expected pattern `func $name$($name$, ...) $block$`
@@ -186,19 +179,13 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 		// Assignment
 		if var_name, ok := tokens[i].(t.Keyword).(t.CustomKeyword); ok {
 			if op, ok := tokens[i + 1].(t.Operator); ok {
-				#partial switch op {
-				case .Assign, .AddAssign, .SubAssign, .MulAssign, .DivAssign:
-					operator := AssignmentOperator(op)
-					fmt.println(operator == nil)
-					fmt.println("using operator", operator, "on", var_name)
+				if ass_op, ok := op.(t.AssignmentOperator); ok {
+					i += 2 // skip name and operator
 					var_assignment := VariableAssignment {
 						target_variable = var_name,
-						operator = AssignmentOperator(int(op)),
+						operator = ass_op,
+						expr = capture_expression(tokens, &i)
 					}
-
-					i += 2
-					var_assignment.expr = capture_expression(tokens, &i)
-
 					append(&instructions, var_assignment)
 					continue
 				}

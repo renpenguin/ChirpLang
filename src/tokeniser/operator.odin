@@ -1,24 +1,31 @@
 package tokeniser
 
-Operator :: enum {
+ArithmeticOperator :: enum {
 	Add, // +
-	AddAssign, // +=
 	Sub, // -
-	SubAssign, // -=
 	Mul, // *
-	MulAssign, //*=
 	Div, // /
-	DivAssign, // /=
 	And, // and
 	Or, // or
 	Not, // !
 	NotEqual, // !=
-	Assign, // =
 	IsEqual, // ==
 	GreaterThan, // >
 	GreaterEqual, // >=
 	LessThan, // <
 	LessEqual, // <=
+}
+AssignmentOperator :: enum {
+	AddAssign, // +=
+	SubAssign, // -=
+	MulAssign, //*=
+	DivAssign, // /=
+	Assign, // =
+}
+
+Operator :: union {
+	ArithmeticOperator,
+	AssignmentOperator
 }
 
 // Attempts to match the present runes to an operator, checking for a trailing `=`
