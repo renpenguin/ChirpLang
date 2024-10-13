@@ -10,16 +10,17 @@ VariableDefinition :: struct {
 	name: t.CustomKeyword,
 	expr: Expression,
 }
+AssignmentOperator :: enum {
+	Set        = int(t.Operator.Assign),
+	Increment  = int(t.Operator.AddAssign),
+	Decrement  = int(t.Operator.SubAssign),
+	MultiplyBy = int(t.Operator.MulAssign),
+	DivideBy   = int(t.Operator.DivAssign),
+}
 // Operation that either is or ends with `=`. Expected pattern `$name$ $operator$ $expr$;`
 VariableAssignment :: struct {
 	target_variable: t.CustomKeyword,
-	operation:       enum {
-		Set        = int(t.Operator.Assign),
-		Increment  = int(t.Operator.AddAssign),
-		Decrement  = int(t.Operator.SubAssign),
-		MultiplyBy = int(t.Operator.MulAssign),
-		DivideBy   = int(t.Operator.DivAssign),
-	},
+	operator:       AssignmentOperator,
 	expr:            Expression,
 }
 // Defines a function. Expected pattern `func $name$($name$, ...) $block$`
@@ -44,13 +45,12 @@ Statement :: union {
 	VariableDefinition,
 	VariableAssignment,
 	FunctionDefinition,
-	FunctionCall,
 	Forever,
 	Expression,
 }
 
 // Block of code delimited by `()` that evaluates to one value
-Expression :: distinct t.TokenStream
+Expression :: distinct t.TokenStream // TODO: make this its own union (yes, this works)
 // Block of code delimited by `{}`
 Block :: distinct [dynamic]Statement
 
@@ -183,6 +183,28 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 			continue
 		}
 
+		// Assignment
+		if var_name, ok := tokens[i].(t.Keyword).(t.CustomKeyword); ok {
+			if op, ok := tokens[i + 1].(t.Operator); ok {
+				#partial switch op {
+				case .Assign, .AddAssign, .SubAssign, .MulAssign, .DivAssign:
+					operator := AssignmentOperator(op)
+					fmt.println(operator == nil)
+					fmt.println("using operator", operator, "on", var_name)
+					var_assignment := VariableAssignment {
+						target_variable = var_name,
+						operator = AssignmentOperator(int(op)),
+					}
+
+					i += 2
+					var_assignment.expr = capture_expression(tokens, &i)
+
+					append(&instructions, var_assignment)
+					continue
+				}
+			}
+		}
+
 		// Expression (catch-all for anything we may have missed)
 		append(&instructions, Statement(capture_expression(tokens, &i)))
 	}
@@ -192,7 +214,7 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 
 // Captures all `Token`s until a newline into an `Expression`
 capture_expression :: proc(tokens: t.TokenStream, token_index: ^int) -> (expr: Expression) {
-	for { // TODO: proper first pass evaluate_expression to make sure it makes sense
+	for { 	// TODO: make sure the expression isnt complete gibberish (keep brackets, function calls etc. in mind)
 		if _, ok := tokens[token_index^].(t.NewLineType); ok do break
 
 		append(&expr, tokens[token_index^])
