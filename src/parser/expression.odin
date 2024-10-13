@@ -61,16 +61,12 @@ capture_arg_until_closing_bracket :: proc(
 	captured_tokens: TokenStream
 	defer delete(captured_tokens)
 
-	when ODIN_DEBUG do fmt.print("Captured tokens for expression [[ ")
-
 	bracket_depth := 1
 	for bracket_depth > 0 {
 		token_index^ += 1
 		token := tokens[token_index^]
 		if token == Token(Bracket{.Round, .Opening}) do bracket_depth += 1
 		if token == Token(Bracket{.Round, .Closing}) do bracket_depth -= 1
-
-		when ODIN_DEBUG do fmt.print(token, ", ", sep = "")
 
 		append(&captured_tokens, token)
 		if token == Token(Comma) && bracket_depth == 1 {
@@ -79,8 +75,6 @@ capture_arg_until_closing_bracket :: proc(
 		}
 	}
 	pop(&captured_tokens) // Remove last )
-
-	when ODIN_DEBUG do fmt.println("]] into", captured_tokens)
 
 	return build_expression(captured_tokens), was_comma
 }
@@ -184,15 +178,7 @@ build_expression :: proc(
 					error_msg = "Invalid expression: literal follows other expression",
 				}
 			case .StoredPartAndOperator:
-				// Combine expressions into operation
-				when ODIN_DEBUG do fmt.println(
-					"Combining expressions",
-					stored_part,
-					"and",
-					s,
-					"into operation",
-					stored_operator,
-				)
+				// Combine expressions into one operation
 				operation := Operation {
 					left  = new(Expression),
 					right = new(Expression),
