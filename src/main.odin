@@ -3,6 +3,7 @@ package main
 import "core:fmt"
 import "core:mem"
 import "formatter"
+import "parser"
 import "tokeniser"
 
 main :: proc() {
@@ -31,10 +32,12 @@ main :: proc() {
 	tokens := tokeniser.tokenise(#load("../examples/hello_world.lc", string))
 	defer tokeniser.destroy_token_stream(tokens)
 
-	fmt.println("=== Loaded tokens: ===")
+	fmt.println("=== Tokenised: ===")
 	fmt.println(tokens)
-	fmt.println("=== Parsed text as: ===")
-	parsed_string := formatter.format(tokens)
-	defer delete(parsed_string)
-	fmt.println(parsed_string)
+
+	block, err := parser.parse(tokens)
+	if !err.ok do fmt.println("Error while parsing: ", err.error_msg, ", found ", err.found, sep = "")
+
+	fmt.println("\n== Code parsed into: ==")
+	render_block(block)
 }

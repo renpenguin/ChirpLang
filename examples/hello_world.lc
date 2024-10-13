@@ -9,6 +9,8 @@ func main() {
 	forever {
 		num += 0.2618
 		print(f"Repeated { num } times")
-		print(f"sin({ num }) = { math:sin(num) }")
+
+		var sin_num = math:sin(num)
+		print(f"sin({ num }) = { sin_num }")
 	}
 }
