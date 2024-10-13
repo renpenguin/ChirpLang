@@ -1,6 +1,6 @@
 package tokeniser
 
-@(private)
+@(private = "file")
 MAX_ALLOWED_NEWLINES :: 2
 
 NewLineType :: struct {

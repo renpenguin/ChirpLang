@@ -58,7 +58,7 @@ try_parse_keyword :: proc(input_chars: []rune, char_index: ^int) -> (keyword: Ke
 }
 
 // Attempts to map the input `CustomKeyword` to a `BuiltInKeyword`
-@(private)
+@(private = "file")
 try_match_to_builtin_keyword :: proc(
 	custom_keyword: CustomKeyword,
 ) -> (

@@ -12,8 +12,8 @@ Literal :: union #no_nil {
 	float,
 }
 
-@(private)
 // Attempts to map the custom keyword onto a `true` or `false` literal. Consumes the keyword if successful
+@(private)
 try_match_keyword_to_bool_literal :: proc(keyword: Keyword) -> (literal: Maybe(Literal)) {
 	if keyword == CustomKeyword("true") do literal = true
 	if keyword == CustomKeyword("false") do literal = false
@@ -24,8 +24,8 @@ try_match_keyword_to_bool_literal :: proc(keyword: Keyword) -> (literal: Maybe(L
 	return
 }
 
-@(private)
 // Attempts to match a leading `string`, `int` or `float` literal. Boolean literals are handled in `tokenise_next_char`
+@(private)
 try_match_to_literal :: proc(
 	input_chars: []rune,
 	char_index: ^int,

@@ -2,6 +2,7 @@ package tokeniser
 
 TokenStream :: distinct [dynamic]Token
 
+// Fully destroy the TokenStream
 destroy_token_stream :: proc(tokens: TokenStream) {
 	for token in tokens {
 		#partial switch _ in token {

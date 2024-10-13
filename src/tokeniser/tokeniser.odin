@@ -45,11 +45,11 @@ tokenise :: proc(input: string) -> (tokens: TokenStream) {
 	return
 }
 
-@(private)
+// Capture the next
+@(private = "file")
 tokenise_next_char :: proc(tokens: ^TokenStream, input_chars: []rune, char_index: ^int) {
 	c := input_chars[char_index^]
-	// Ignore whitespace
-	if strings.is_space(c) && c != '\n' do return
+	if strings.is_space(c) && c != '\n' do return // Ignore whitespace
 
 	// Handle new lines
 	if c == '\n' || c == ';' {

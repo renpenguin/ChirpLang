@@ -5,27 +5,6 @@ import "core:fmt"
 import "core:strings"
 import "core:unicode/utf8"
 
-@(private)
-write_bracket :: proc(
-	sb: ^strings.Builder,
-	previous_token: t.Token,
-	indent: ^int,
-	bracket: t.Bracket,
-) {
-	if bracket.state == .Opening {
-		indent^ += 1
-
-		if bracket.type == .Curly {
-			strings.write_rune(sb, ' ')
-		}
-	} else {
-		indent^ -= 1
-		if t.is_new_line(previous_token) do strings.pop_rune(sb)
-	}
-
-	strings.write_rune(sb, bracket_to_rune(bracket))
-}
-
 // Parses the token stream back into a human-readable string
 format :: proc(tokens: t.TokenStream) -> string {
 	using t
@@ -55,7 +34,16 @@ format :: proc(tokens: t.TokenStream) -> string {
 			}
 
 		case Bracket:
-			write_bracket(&sb, previous_token, &indent, token.(Bracket))
+			bracket := token.(Bracket)
+			if bracket.state == .Opening {
+				indent += 1
+				if bracket.type == .Curly do strings.write_rune(&sb, ' ')
+			} else {
+				indent -= 1
+				if t.is_new_line(previous_token) do strings.pop_rune(&sb)
+			}
+
+			strings.write_rune(&sb, bracket_to_rune(bracket))
 
 		case Literal:
 			literal := token.(Literal)
