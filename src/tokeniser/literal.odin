@@ -13,6 +13,19 @@ Literal :: union #no_nil {
 }
 
 @(private)
+// Attempts to map the custom keyword onto a `true` or `false` literal. Consumes the keyword if successful
+try_match_keyword_to_bool_literal :: proc(keyword: Keyword) -> (literal: Maybe(Literal)) {
+	if keyword == CustomKeyword("true") do literal = true
+	if keyword == CustomKeyword("false") do literal = false
+
+	_, did_match := literal.?
+	if did_match do delete(string(keyword.(CustomKeyword)))
+
+	return
+}
+
+@(private)
+// Attempts to match a leading `string`, `int` or `float` literal. Boolean literals are handled in `tokenise_next_char`
 try_match_to_literal :: proc(
 	input_chars: []rune,
 	char_index: ^int,
@@ -21,19 +34,6 @@ try_match_to_literal :: proc(
 	ok: bool,
 ) {
 	c := input_chars[char_index^]
-
-	// Boolean literals
-	// TODO: runes_to_string is leaking memory here. fix later
-	if (len(input_chars) - char_index^) > 4 &&
-	   utf8.runes_to_string(input_chars[char_index^:][:5]) == "false" {
-		char_index^ += 4
-		return false, true
-	}
-	if (len(input_chars) - char_index^) > 3 &&
-	   utf8.runes_to_string(input_chars[char_index^:][:4]) == "true" {
-		char_index^ += 3
-		return true, true
-	}
 
 	// String literals
 	if c == '"' || c == '\'' {

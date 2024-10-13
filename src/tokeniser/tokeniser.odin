@@ -65,11 +65,13 @@ tokenise_next_char :: proc(tokens: ^TokenStream, input_chars: []rune, char_index
 		}
 	}
 
+	// Literals
 	if literal, ok := try_match_to_literal(input_chars, char_index); ok {
 		append(tokens, literal)
 		return
 	}
 
+	// Operators
 	if op, ok := try_match_to_assignable_operator(input_chars, char_index); ok {
 		append(tokens, op)
 		return
@@ -77,7 +79,10 @@ tokenise_next_char :: proc(tokens: ^TokenStream, input_chars: []rune, char_index
 
 	// Keywords
 	if keyword, ok := try_parse_keyword(input_chars, char_index); ok {
-		append(tokens, keyword)
+		// Attempt to map the keyword onto `true` or `false`
+		bool_literal, ok := try_match_keyword_to_bool_literal(keyword).?
+		if ok do append(tokens, bool_literal)
+		else do append(tokens, keyword)
 		return
 	}
 
