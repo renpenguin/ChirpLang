@@ -2,7 +2,7 @@ import math, random
 
 func main() {
 	print("hi!")
-	var dice_roll = random:range(1,6)
+	var dice_roll = random:range(1,5 + 1)
 	print(f"Dice roll: {dice_roll}")
 
 	var num = 0

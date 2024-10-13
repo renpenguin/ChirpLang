@@ -23,13 +23,48 @@ render_block :: proc(block: parser.Block, indent := 0) {
 			render_block(instruction.(Forever).block, indent + 1)
 		case VariableDefinition:
 			var_def := instruction.(VariableDefinition)
-			fmt.println("[VarSet]", var_def.name, "[is set to]", var_def.expr)
+			fmt.print("[VarSet]", var_def.name, "[is set to] ")
+			render_expression(var_def.expr)
+			fmt.println()
 		case VariableAssignment:
 			var_ass := instruction.(VariableAssignment)
-			fmt.println("[VarAss]", var_ass.target_var, "[", var_ass.operator, "]", var_ass.expr)
+			fmt.print("[VarAss]", var_ass.target_var, "[", var_ass.operator, "] ")
+			render_expression(var_ass.expr)
+			fmt.println()
 		case Expression:
 			expr := instruction.(Expression)
-			fmt.println("[Expr]", expr)
+			fmt.print("[Expr] ")
+			render_expression(expr)
+			fmt.println()
 		}
+	}
+}
+
+render_expression :: proc(expr: parser.Expression) {
+	#partial switch _ in expr {
+		case parser.Operation:
+			op := expr.(parser.Operation)
+			fmt.print("Operation{left = ")
+			render_expression(op.left^)
+			fmt.print(", op = ",op.op, ", right = ", sep = "")
+			render_expression(op.right^)
+			fmt.print("}")
+
+		case parser.FunctionCall:
+			func_call := expr.(parser.FunctionCall)
+			fmt.print("FunctionCall{ ", func_call.name, ", ", sep = "")
+
+			for arg in func_call.args[:len(func_call.args)-1] {
+				render_expression(arg)
+				fmt.print(", ")
+			}
+			render_expression(func_call.args[len(func_call.args)-1])
+			fmt.print(" }")
+
+		case parser.FormatString:
+			fmt.print("Format{ \"", expr.(parser.FormatString), "\" }", sep="")
+
+		case:
+			fmt.print(expr)
 	}
 }

@@ -8,7 +8,7 @@ Block :: distinct [dynamic]Statement
 
 ParseError :: struct {
 	error_msg: string,
-	found:     t.Token,
+	found:     Maybe(t.Token),
 	ok:        bool,
 }
 
@@ -125,7 +125,8 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 			if !err.ok do return
 
 			i += 1
-			var_def.expr = capture_expression(tokens, &i)
+			var_def.expr, err = capture_expression(tokens, &i)
+			if !err.ok do return
 
 			append(&instructions, var_def)
 			continue
@@ -137,10 +138,14 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 				if op, ok := tokens[i + 1].(t.Operator); ok {
 					if ass_op, ok := op.(t.AssignmentOperator); ok {
 						i += 2 // skip name and operator
+						expr: Expression
+						expr, err = capture_expression(tokens, &i)
+						if !err.ok do return
+
 						var_assignment := VariableAssignment {
 							target_var = var_name,
 							operator   = ass_op,
-							expr       = capture_expression(tokens, &i),
+							expr       = expr,
 						}
 						append(&instructions, var_assignment)
 						continue
@@ -150,19 +155,10 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 		}
 
 		// Expression (catch-all for anything we may have missed)
-		append(&instructions, Statement(capture_expression(tokens, &i)))
-	}
-
-	return
-}
-
-// Captures all `Token`s until a newline into an `Expression`
-capture_expression :: proc(tokens: t.TokenStream, token_index: ^int) -> (expr: Expression) {
-	for { 	// TODO: make sure the expression isnt complete gibberish (keep brackets, function calls etc. in mind)
-		if t.is_new_line(tokens[token_index^]) do break
-
-		append(&expr, tokens[token_index^])
-		token_index^ += 1
+		expr: Expression
+		expr, err = capture_expression(tokens, &i)
+		if !err.ok do return
+		append(&instructions, Statement(expr))
 	}
 
 	return
