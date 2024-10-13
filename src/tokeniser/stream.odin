@@ -7,15 +7,13 @@ destroy_token_stream :: proc(tokens: TokenStream) {
 		#partial switch _ in token {
 		case Keyword:
 			keyword := token.(Keyword)
-			#partial switch _ in keyword {
-			case CustomKeyword:
-				delete(string(keyword.(CustomKeyword)))
+			if custom_keyword, ok := keyword.(CustomKeyword); ok {
+				delete(string(custom_keyword))
 			}
 		case Literal:
 			literal := token.(Literal)
-			#partial switch _ in literal {
-			case string:
-				delete(literal.(string))
+			if str_literal, ok := literal.(string); ok {
+				delete(string(str_literal))
 			}
 		}
 	}
