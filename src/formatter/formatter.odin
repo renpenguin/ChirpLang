@@ -20,8 +20,7 @@ write_bracket :: proc(
 		}
 	} else {
 		indent^ -= 1
-		_, was_new_line := previous_token.(t.NewLineType)
-		if was_new_line do strings.pop_rune(sb)
+		if t.is_new_line(previous_token) do strings.pop_rune(sb)
 	}
 
 	strings.write_rune(sb, bracket_to_rune(bracket))

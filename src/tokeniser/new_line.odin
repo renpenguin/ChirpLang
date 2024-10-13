@@ -9,6 +9,11 @@ NewLineType :: struct {
 
 NewLine :: NewLineType{1} // shorthand to avoid having to specify the count every time i want to indicate a newline
 
+is_new_line :: proc(token: Token) -> bool {
+	_, is_new_line := token.(NewLineType)
+	return is_new_line
+}
+
 @(private)
 append_new_line :: proc(tokens: ^TokenStream) {
 	previous_token, was_new_line := tokens[len(tokens) - 1].(NewLineType)

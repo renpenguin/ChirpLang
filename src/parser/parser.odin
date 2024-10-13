@@ -12,9 +12,9 @@ VariableDefinition :: struct {
 }
 // Operation that either is or ends with `=`. Expected pattern `$name$ $operator$ $expr$;`
 VariableAssignment :: struct {
-	target_variable: t.CustomKeyword,
-	operator:       t.AssignmentOperator,
-	expr:            Expression,
+	target_var: t.CustomKeyword,
+	operator:   t.AssignmentOperator,
+	expr:       Expression,
 }
 // Defines a function. Expected pattern `func $name$($name$, ...) $block$`
 FunctionDefinition :: struct {
@@ -60,7 +60,7 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 	}
 
 	for i := 0; i < len(tokens); i += 1 {
-		if _, ok := tokens[i].(t.NewLineType); ok do continue
+		if t.is_new_line(tokens[i]) do continue
 
 		// Import
 		if tokens[i] == Token(Keyword(BuiltInKeyword.Import)) {
@@ -78,7 +78,7 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 				append(&import_statement, keyword)
 
 				i += 1
-				if _, ok := tokens[i].(t.NewLineType); ok do break
+				if t.is_new_line(tokens[i]) do break
 				err = expect_token(
 					tokens[i],
 					Comma,
@@ -123,11 +123,7 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 				append(&func_def.args, arg_name)
 
 				if tokens[i] == Token(Bracket{.Round, .Closing}) do break
-				err = expect_token(
-					tokens[i],
-					Token(Comma),
-					"Expected ) or comma after function argument",
-				)
+				err = expect_token(tokens[i], Comma, "Expected ) or comma after function argument")
 			}
 
 			i += 1
@@ -139,7 +135,7 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 		}
 
 		// Forever
-		if tokens[i] == Token(Keyword(BuiltInKeyword.Forever)) {
+		if tokens[i] == Token(Keyword(.Forever)) {
 			forever: Forever
 
 			i += 1
@@ -151,7 +147,7 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 		}
 
 		// Variable definition
-		if tokens[i] == Token(Keyword(BuiltInKeyword.Var)) {
+		if tokens[i] == Token(Keyword(.Var)) {
 			var_def: VariableDefinition
 
 			i += 1
@@ -164,7 +160,7 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 			i += 1
 			err = expect_token(
 				tokens[i],
-				Token(Operator.Assign),
+				Token(Operator(.Assign)),
 				"Expected `=` after variable name in variable definition",
 			)
 			if !err.ok do return
@@ -177,17 +173,19 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 		}
 
 		// Assignment
-		if var_name, ok := tokens[i].(t.Keyword).(t.CustomKeyword); ok {
-			if op, ok := tokens[i + 1].(t.Operator); ok {
-				if ass_op, ok := op.(t.AssignmentOperator); ok {
-					i += 2 // skip name and operator
-					var_assignment := VariableAssignment {
-						target_variable = var_name,
-						operator = ass_op,
-						expr = capture_expression(tokens, &i)
+		if keyword, ok := tokens[i].(t.Keyword); ok {
+			if var_name, ok := keyword.(t.CustomKeyword); ok {
+				if op, ok := tokens[i + 1].(t.Operator); ok {
+					if ass_op, ok := op.(t.AssignmentOperator); ok {
+						i += 2 // skip name and operator
+						var_assignment := VariableAssignment {
+							target_var = var_name,
+							operator   = ass_op,
+							expr       = capture_expression(tokens, &i),
+						}
+						append(&instructions, var_assignment)
+						continue
 					}
-					append(&instructions, var_assignment)
-					continue
 				}
 			}
 		}
@@ -202,7 +200,7 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 // Captures all `Token`s until a newline into an `Expression`
 capture_expression :: proc(tokens: t.TokenStream, token_index: ^int) -> (expr: Expression) {
 	for { 	// TODO: make sure the expression isnt complete gibberish (keep brackets, function calls etc. in mind)
-		if _, ok := tokens[token_index^].(t.NewLineType); ok do break
+		if t.is_new_line(tokens[token_index^]) do break
 
 		append(&expr, tokens[token_index^])
 		token_index^ += 1

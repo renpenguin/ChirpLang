@@ -93,8 +93,7 @@ tokenise_next_char :: proc(tokens: ^TokenStream, input_chars: []rune, char_index
 	case '{': append(tokens, Bracket{.Curly, .Opening})
 	case '}':
 		// If no newline before }, add a newline first
-		_, was_bracket := tokens[len(tokens) - 1].(NewLineType)
-		if !was_bracket {
+		if !is_new_line(tokens[len(tokens) - 1]) {
 			append_new_line(tokens)
 		}
 		append(tokens, Bracket{.Curly, .Closing})

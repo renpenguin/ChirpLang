@@ -25,7 +25,7 @@ AssignmentOperator :: enum {
 
 Operator :: union {
 	ArithmeticOperator,
-	AssignmentOperator
+	AssignmentOperator,
 }
 
 // Attempts to match the present runes to an operator, checking for a trailing `=`
