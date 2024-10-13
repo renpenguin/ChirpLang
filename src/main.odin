@@ -38,6 +38,6 @@ main :: proc() {
 	block, err := parser.parse(tokens)
 	if !err.ok do fmt.println("Error while parsing: ", err.error_msg, ", found ", err.found, sep = "")
 
-	fmt.println("\n== Code parsed into: ==")
+	fmt.println("\n=== Code parsed into: ===")
 	render_block(block)
 }

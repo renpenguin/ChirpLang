@@ -69,8 +69,6 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 	for i := 0; i < len(tokens); i += 1 {
 		if _, ok := tokens[i].(t.NewLineType); ok do continue
 
-		fmt.println("===", tokens[i], "===")
-
 		// Import
 		if tokens[i] == Token(Keyword(BuiltInKeyword.Import)) {
 			import_statement: Import
@@ -96,7 +94,6 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 				if !err.ok do return
 			}
 
-			fmt.println(([dynamic]t.CustomKeyword)(import_statement))
 			append(&instructions, import_statement)
 			continue
 		}
@@ -140,11 +137,9 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 				)
 			}
 
-			fmt.println("====== Capturing function block:", func_def.name, "======")
 			i += 1
 			func_def.block, err = capture_block(tokens, &i)
 			if !err.ok do return
-			fmt.println("====== Captured function block:", func_def.name, "======")
 
 			append(&instructions, func_def)
 			continue
@@ -154,11 +149,9 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 		if tokens[i] == Token(Keyword(BuiltInKeyword.Forever)) {
 			forever: Forever
 
-			fmt.println("====== Capturing forever block ======")
 			i += 1
 			forever.block, err = capture_block(tokens, &i)
 			if !err.ok do return
-			fmt.println("====== Captured forever block =====")
 
 			append(&instructions, forever)
 			continue
@@ -179,14 +172,13 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 			err = expect_token(
 				tokens[i],
 				Token(Operator.Assign),
-				"Expected = after variable name in variable definition",
+				"Expected `=` after variable name in variable definition",
 			)
 			if !err.ok do return
 
 			i += 1
 			var_def.expr = capture_expression(tokens, &i)
 
-			fmt.println("Assigned", var_def.expr, "to", var_def.name)
 			append(&instructions, var_def)
 			continue
 		}
@@ -237,8 +229,6 @@ capture_block :: proc(
 		append(&captured_tokens, token)
 	}
 	pop(&captured_tokens) // Remove last }
-
-	fmt.println("Captured", captured_tokens, "into block, parsing...")
 
 	return parse(captured_tokens)
 }
