@@ -16,74 +16,20 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 		if t.is_new_line(tokens[i]) do continue
 
 		// Import
-		if tokens[i] == Token(Keyword(BuiltInKeyword.Import)) {
-			import_statement: Import
-
-			for {
-				i += 1
-				keyword: CustomKeyword
-				keyword, err = expect_custom_keyword(
-					tokens[i],
-					"Expected library reference in import statement",
-				)
-				if !err.ok do return
-
-				append(&import_statement, keyword)
-
-				i += 1
-				if t.is_new_line(tokens[i]) do break
-				err = expect_token(
-					tokens[i],
-					Comma,
-					"Expected newline or comma after library reference in import statement",
-				)
-				if !err.ok do return
-			}
-
-			append(&instructions, import_statement)
+		import_statement: Maybe(Import)
+		import_statement, err = try_match_import(tokens, &i)
+		if !err.ok do return
+		if statement, ok := import_statement.?; ok {
+			append(&instructions, statement)
 			continue
 		}
 
 		// Function
-		if tokens[i] == Token(Keyword(BuiltInKeyword.Func)) {
-			func_def: FunctionDefinition
-
-			i += 1
-			func_def.name, err = expect_custom_keyword(
-				tokens[i],
-				"Expected function name in function definition",
-			)
-			if !err.ok do return
-
-			i += 1
-			err = expect_token(
-				tokens[i],
-				Token(Bracket{.Round, .Opening}),
-				"Expected ( in function",
-			)
-			if !err.ok do return
-
-			for {
-				i += 1
-				if tokens[i] == Token(Bracket{.Round, .Closing}) do break
-				arg_name: t.CustomKeyword
-				arg_name, err = expect_custom_keyword(
-					tokens[i],
-					"Expected argument name in function definition",
-				)
-				if !err.ok do return
-
-				append(&func_def.args, arg_name)
-
-				if tokens[i] == Token(Bracket{.Round, .Closing}) do break
-				err = expect_token(tokens[i], Comma, "Expected ) or comma after function argument")
-			}
-
-			i += 1
-			func_def.block, err = capture_block(tokens, &i)
-			if !err.ok do return
-
-			append(&instructions, func_def)
+		func_def: Maybe(FunctionDefinition)
+		func_def, err = try_match_func_definition(tokens, &i)
+		if !err.ok do return
+		if statement, ok := func_def.?; ok {
+			append(&instructions, statement)
 			continue
 		}
 
@@ -100,52 +46,21 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
 		}
 
 		// Variable definition
-		if tokens[i] == Token(Keyword(.Var)) {
-			var_def: VariableDefinition
-
-			i += 1
-			var_def.name, err = expect_custom_keyword(
-				tokens[i],
-				"Expected variable name after `var` in variable definition",
-			)
-			if !err.ok do return
-
-			i += 1
-			err = expect_token(
-				tokens[i],
-				Token(Operator(.Assign)),
-				"Expected `=` after variable name in variable definition",
-			)
-			if !err.ok do return
-
-			i += 1
-			var_def.expr, err = capture_expression(tokens, &i)
-			if !err.ok do return
-
-			append(&instructions, var_def)
+		var_def: Maybe(VariableDefinition)
+		var_def, err = try_match_var_definition(tokens, &i)
+		if !err.ok do return
+		if statement, ok := var_def.?; ok {
+			append(&instructions, statement)
 			continue
 		}
 
-		// Assignment
-		if keyword, ok := tokens[i].(t.Keyword); ok {
-			if var_name, ok := keyword.(t.CustomKeyword); ok {
-				if op, ok := tokens[i + 1].(t.Operator); ok {
-					if ass_op, ok := op.(t.AssignmentOperator); ok {
-						i += 2 // skip name and operator
-						expr: Expression
-						expr, err = capture_expression(tokens, &i)
-						if !err.ok do return
-
-						var_assignment := VariableAssignment {
-							target_var = var_name,
-							operator   = ass_op,
-							expr       = expr,
-						}
-						append(&instructions, var_assignment)
-						continue
-					}
-				}
-			}
+		// Variable assignment
+		var_assignment: Maybe(VariableAssignment)
+		var_assignment, err = try_match_var_assignment(tokens, &i)
+		if !err.ok do return
+		if statement, ok := var_assignment.?; ok {
+			append(&instructions, statement)
+			continue
 		}
 
 		// Expression (catch-all for anything we may have missed)
