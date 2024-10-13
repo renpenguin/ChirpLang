@@ -5,17 +5,16 @@ import "core:strings"
 import "core:unicode"
 import "core:unicode/utf8"
 
-BracketStyle :: enum {
-	Round, // Used for calling/defining functions, order of operations (expressions)
-	Square, // Used to define and access arrays
-	Curly, // Used for function/if/loop scope and struct/enum definitions
-}
 Bracket :: struct {
-	type:  BracketStyle,
+	type:  enum {
+		Round, // Used for calling/defining functions, order of operations (expressions)
+		Square, // Used to define and access arrays
+		Curly, // Used for function/if/loop scope and struct/enum definitions
+	} `fmt:"s"`,
 	state: enum {
 		Opening,
 		Closing,
-	},
+	} `fmt:"s"`,
 }
 
 CommaType :: struct {} // unique zero-sided type
