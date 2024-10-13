@@ -23,7 +23,7 @@ render_block :: proc(block: parser.Block, indent := 0) {
 			render_block(instruction.(Forever).block, indent + 1)
 		case VariableDefinition:
 			var_def := instruction.(VariableDefinition)
-			fmt.print("[VarSet]", var_def.name, "[is set to] ")
+			fmt.print("[VarDef]", var_def.name, "[=] ")
 			render_expression(var_def.expr)
 			fmt.println()
 		case VariableAssignment:
