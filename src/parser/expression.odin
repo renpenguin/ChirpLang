@@ -43,7 +43,7 @@ capture_expression :: proc(
 		token_index^ += 1
 	}
 
-	return evaluate_expression(captured_tokens)
+	return build_expression(captured_tokens)
 }
 
 // Captures all `Token`s until a newline or comma into an `Expression`. The last value will be true if it was a comma
@@ -55,7 +55,8 @@ capture_arg_until_closing_bracket :: proc(
 	err: ParseError,
 	was_comma: bool,
 ) {
-	captured_tokens: t.TokenStream
+	using t
+	captured_tokens: TokenStream
 	defer delete(captured_tokens)
 
 	when ODIN_DEBUG do fmt.print("Captured tokens for expression [[ ")
@@ -64,13 +65,13 @@ capture_arg_until_closing_bracket :: proc(
 	for bracket_depth > 0 {
 		token_index^ += 1
 		token := tokens[token_index^]
-		if token == t.Token(t.Bracket{.Round, .Opening}) do bracket_depth += 1
-		if token == t.Token(t.Bracket{.Round, .Closing}) do bracket_depth -= 1
+		if token == Token(Bracket{.Round, .Opening}) do bracket_depth += 1
+		if token == Token(Bracket{.Round, .Closing}) do bracket_depth -= 1
 
 		when ODIN_DEBUG do fmt.print(token, ", ", sep = "")
 
 		append(&captured_tokens, token)
-		if token == t.Token(t.Comma) && bracket_depth == 1 {
+		if token == Token(Comma) && bracket_depth == 1 {
 			was_comma = true
 			break
 		}
@@ -79,15 +80,18 @@ capture_arg_until_closing_bracket :: proc(
 
 	when ODIN_DEBUG do fmt.println("]] into", captured_tokens)
 
-	return evaluate_expression(captured_tokens), was_comma
+	return build_expression(captured_tokens), was_comma
 }
 
-evaluate_expression :: proc(tokens: t.TokenStream) -> (expr: Expression, err: ParseError) {
-	err = ParseError {
-		ok = true,
-	}
-	stored_part: Expression
-	stored_operator: t.ArithmeticOperator
+// Builds an Expression out of the loaded tokens
+build_expression :: proc(
+	tokens: t.TokenStream,
+) -> (
+	expr: Expression,
+	err := ParseError{ok = true},
+) {
+	using t
+	stored_operator: ArithmeticOperator
 	state: enum {
 		StoredPart,
 		StoredPartAndOperator,
@@ -97,12 +101,12 @@ evaluate_expression :: proc(tokens: t.TokenStream) -> (expr: Expression, err: Pa
 	for i := 0; i < len(tokens); i += 1 {
 		to_store: Maybe(Expression) = nil
 
-		if op, ok := tokens[i].(t.Operator); ok {
-			arith_op, ok := op.(t.ArithmeticOperator)
+		if op, ok := tokens[i].(Operator); ok {
+			arith_op, ok := op.(ArithmeticOperator)
 			if !ok {
 				return nil, ParseError {
 					error_msg = "Invalid expression: expected arithmetic operator",
-					found = t.Token(op),
+					found = Token(op),
 				}
 			}
 
@@ -125,24 +129,24 @@ evaluate_expression :: proc(tokens: t.TokenStream) -> (expr: Expression, err: Pa
 			continue
 		}
 
-		if literal, ok := tokens[i].(t.Literal); ok {
+		if literal, ok := tokens[i].(Literal); ok { 	// Literal
 			to_store = literal
-		} else if tokens[i] == t.Token(t.Keyword(.FString)) {
+		} else if tokens[i] == Token(Keyword(.FString)) { 	// f-string
 			FSTRING_ERROR_MSG :: "Invalid expression: Expected string literal after `f` keyword"
-			if i + 1 >= len(tokens) do return nil, ParseError { error_msg = FSTRING_ERROR_MSG }
+			if i + 1 >= len(tokens) do return nil, ParseError{error_msg = FSTRING_ERROR_MSG}
 
-			literal, lit_ok := tokens[i + 1].(t.Literal)
-			if !lit_ok do return nil, ParseError { error_msg = FSTRING_ERROR_MSG, found = t.Token(literal) }
+			literal, lit_ok := tokens[i + 1].(Literal)
+			if !lit_ok do return nil, ParseError{error_msg = FSTRING_ERROR_MSG, found = Token(literal)}
 			str, str_ok := literal.(string)
-			if !str_ok do return nil, ParseError { error_msg = FSTRING_ERROR_MSG, found = t.Token(literal) }
+			if !str_ok do return nil, ParseError{error_msg = FSTRING_ERROR_MSG, found = Token(literal)}
 
 			i += 1
 			to_store = FormatString(str)
-		} else if keyword, ok := tokens[i].(t.Keyword); ok {
-			custom_keyword, ok := keyword.(t.CustomKeyword)
-			if !ok do return nil, ParseError { error_msg = "Invalid expression: Expected custom keyword", found = t.Token(keyword) }
+		} else if keyword, ok := tokens[i].(Keyword); ok { 	// Custom keyword
+			custom_keyword, ok := keyword.(CustomKeyword)
+			if !ok do return nil, ParseError{error_msg = "Invalid expression: Expected custom keyword", found = Token(keyword)}
 
-			if i + 1 < len(tokens) && tokens[i + 1] == t.Token(t.Bracket{.Round, .Opening}) {
+			if i + 1 < len(tokens) && tokens[i + 1] == Token(Bracket{.Round, .Opening}) {
 				i += 1
 				func_call := FunctionCall {
 					name = custom_keyword,
@@ -162,16 +166,16 @@ evaluate_expression :: proc(tokens: t.TokenStream) -> (expr: Expression, err: Pa
 			} else {
 				to_store = custom_keyword
 			}
-		}
-
-		if tokens[i] == t.Token(t.Bracket{.Round, .Opening}) {
+		} else if tokens[i] == Token(Bracket{.Round, .Opening}) { 	// Nested expression
 			was_comma: bool
 			to_store, err, was_comma = capture_arg_until_closing_bracket(tokens, &i)
 			if !err.ok do return
 			if was_comma do return nil, ParseError{error_msg = "Invalid expression: comma found separating values in expression"}
 		}
 
-		if s, ok := to_store.?; ok {
+		s, ok := to_store.?
+		if !ok do return nil, ParseError{error_msg = "Invalid expression", found = Token(tokens[i])}
+		if ok {
 			switch state {
 			case .StoredPart:
 				return nil, ParseError {
@@ -192,25 +196,23 @@ evaluate_expression :: proc(tokens: t.TokenStream) -> (expr: Expression, err: Pa
 					right = new(Expression),
 					op    = stored_operator,
 				}
-				operation.left^ = stored_part
+				operation.left^ = expr
 				operation.right^ = s
-				stored_part = Expression(operation)
+				expr = Expression(operation)
 				state = .StoredPart
 			case .None:
-				stored_part = s
+				expr = s
 				state = .StoredPart
 			}
 		}
 	}
 
-	switch state {
-	case .StoredPart:
-		return stored_part, ParseError{ok = true}
+	#partial switch state {
 	case .StoredPartAndOperator:
 		return nil, ParseError{error_msg = "Invalid expression: found trailing operator"}
 	case .None:
 		return nil, ParseError{error_msg = "Empty expression"}
 	}
 
-	panic("Unreachable")
+	return
 }

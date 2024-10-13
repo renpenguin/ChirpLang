@@ -47,22 +47,23 @@ capture_block :: proc(
 	block: Block,
 	err: ParseError,
 ) {
+	using t
 	err = expect_token(
 		tokens[token_index^],
-		t.Bracket{.Curly, .Opening},
+		Bracket{.Curly, .Opening},
 		"Expected scope to begin with {",
 	)
 	if !err.ok do return
 
-	captured_tokens: t.TokenStream
+	captured_tokens: TokenStream
 	defer delete(captured_tokens)
 	bracket_depth := 1
 
 	for bracket_depth > 0 {
 		token_index^ += 1
 		token := tokens[token_index^]
-		if token == t.Token(t.Bracket{.Curly, .Opening}) do bracket_depth += 1
-		else if token == t.Token(t.Bracket{.Curly, .Closing}) do bracket_depth -= 1
+		if token == Token(Bracket{.Curly, .Opening}) do bracket_depth += 1
+		else if token == Token(Bracket{.Curly, .Closing}) do bracket_depth -= 1
 
 		append(&captured_tokens, token)
 	}
@@ -77,12 +78,11 @@ try_match_import :: proc(
 	char_index: ^int,
 ) -> (
 	import_statement: Maybe(Import),
-	err := ParseError { ok = true },
+	err := ParseError{ok = true},
 ) {
 	using t
-	import_statement = Import {}
-
-	if tokens[char_index^] != Token(Keyword(.Import)) do return nil, err
+	if tokens[char_index^] != Token(Keyword(.Import)) do return
+	import_statement = Import{}
 
 	for {
 		char_index^ += 1
@@ -96,7 +96,7 @@ try_match_import :: proc(
 		append(&import_statement.?, keyword)
 
 		char_index^ += 1
-		if t.is_new_line(tokens[char_index^]) do break
+		if is_new_line(tokens[char_index^]) do break
 		err = expect_token(
 			tokens[char_index^],
 			Comma,
@@ -114,13 +114,10 @@ try_match_func_definition :: proc(
 	char_index: ^int,
 ) -> (
 	func_definition: Maybe(FunctionDefinition),
-	err: ParseError,
+	err := ParseError{ok = true},
 ) {
 	using t
-	err = ParseError { ok = true }
-
-	if tokens[char_index^] != Token(Keyword(.Func)) do return nil, err
-
+	if tokens[char_index^] != Token(Keyword(.Func)) do return
 	func_def: FunctionDefinition
 
 	char_index^ += 1
@@ -141,7 +138,7 @@ try_match_func_definition :: proc(
 	for {
 		char_index^ += 1
 		if tokens[char_index^] == Token(Bracket{.Round, .Closing}) do break
-		arg_name: t.CustomKeyword
+		arg_name: CustomKeyword
 		arg_name, err = expect_custom_keyword(
 			tokens[char_index^],
 			"Expected argument name in function definition",
@@ -152,7 +149,11 @@ try_match_func_definition :: proc(
 
 		char_index^ += 1
 		if tokens[char_index^] == Token(Bracket{.Round, .Closing}) do break
-		err = expect_token(tokens[char_index^], Comma, "Expected ) or comma after function argument")
+		err = expect_token(
+			tokens[char_index^],
+			Comma,
+			"Expected ) or comma after function argument",
+		)
 	}
 
 	char_index^ += 1
@@ -168,14 +169,12 @@ try_match_var_definition :: proc(
 	char_index: ^int,
 ) -> (
 	var_definition: Maybe(VariableDefinition),
-	err: ParseError,
+	err := ParseError{ok = true},
 ) {
 	using t
-	err = ParseError { ok = true }
-
-	if tokens[char_index^] != Token(Keyword(.Var)) do return nil, err
-
-	var_def: VariableDefinition
+	if tokens[char_index^] != Token(Keyword(.Var)) do return
+	var_definition = VariableDefinition{}
+	var_def := &var_definition.?
 
 	char_index^ += 1
 	var_def.name, err = expect_custom_keyword(
@@ -196,38 +195,36 @@ try_match_var_definition :: proc(
 	var_def.expr, err = capture_expression(tokens, char_index)
 	if !err.ok do return
 
-	return var_def, err
+	return
 }
 
-// Try to match a `VariableAssignment` statement from the current char index
+// Try to match a `VariableAssignment` statement under the cursor
 try_match_var_assignment :: proc(
 	tokens: t.TokenStream,
 	char_index: ^int,
 ) -> (
 	var_assignment: Maybe(VariableAssignment),
-	err: ParseError,
+	err := ParseError{ok = true},
 ) {
-	err = ParseError { ok = true }
-	if keyword, ok := tokens[char_index^].(t.Keyword); ok {
-		if var_name, ok := keyword.(t.CustomKeyword); ok { // TODO: use expect_custom_keyword()
-			if op, ok := tokens[char_index^ + 1].(t.Operator); ok {
-				if ass_op, ok := op.(t.AssignmentOperator); ok {
-					char_index^ += 2 // skip name and operator
-					expr: Expression
-					expr, err = capture_expression(tokens, char_index)
-					if !err.ok do return
+	var_name, custom_keyword_err := expect_custom_keyword(tokens[char_index^], "")
+	if !custom_keyword_err.ok do return
 
-					var_assignment = VariableAssignment {
-						target_var = var_name,
-						operator   = ass_op,
-						expr       = expr,
-					}
+	// Ensure there is an `AssignmentOperator` after the custom keyword
+	op, op_ok := tokens[char_index^ + 1].(t.Operator)
+	if !op_ok do return
+	ass_op, ass_op_ok := op.(t.AssignmentOperator)
+	if !ass_op_ok do return
 
-					return
-				}
-			}
-		}
+	char_index^ += 2 // skip name and operator
+	expr: Expression
+	expr, err = capture_expression(tokens, char_index)
+	if !err.ok do return
+
+	var_assignment = VariableAssignment {
+		target_var = var_name,
+		operator   = ass_op,
+		expr       = expr,
 	}
 
-	return nil, err
+	return
 }

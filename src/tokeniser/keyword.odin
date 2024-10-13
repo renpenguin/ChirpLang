@@ -63,10 +63,8 @@ try_match_to_builtin_keyword :: proc(
 	custom_keyword: CustomKeyword,
 ) -> (
 	keyword: BuiltInKeyword,
-	ok: bool,
+	ok := true,
 ) {
-	ok = true
-
 	switch custom_keyword {
 	case "import": keyword = .Import
 	case "func": keyword = .Func

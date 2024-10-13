@@ -16,14 +16,12 @@ expect_custom_keyword :: proc(
 	error_msg: string,
 ) -> (
 	keyword: t.CustomKeyword,
-	err: ParseError,
+	err := ParseError{ok = true},
 ) {
-	kw, kw_ok := token.(t.Keyword)
-	if kw_ok {
-		ckw, ckw_ok := kw.(t.CustomKeyword)
-		if ckw_ok {
-			return ckw, ParseError{ok = true}
-		}
+	kw, ok := token.(t.Keyword)
+	if ok {
+		keyword, ok = kw.(t.CustomKeyword)
+		if ok do return
 	}
 
 	return t.CustomKeyword(""), ParseError{error_msg = error_msg, found = token}

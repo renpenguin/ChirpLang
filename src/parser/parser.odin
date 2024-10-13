@@ -6,14 +6,11 @@ import "core:fmt"
 // Block of code delimited by `{}`
 Block :: distinct [dynamic]Statement
 
-parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err: ParseError) {
+parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err := ParseError{ok = true}) {
 	using t
-	err = ParseError {
-		ok = true,
-	}
 
 	for i := 0; i < len(tokens); i += 1 {
-		if t.is_new_line(tokens[i]) do continue
+		if is_new_line(tokens[i]) do continue
 
 		// Import
 		import_statement: Maybe(Import)
