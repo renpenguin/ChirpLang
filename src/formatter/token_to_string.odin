@@ -1,4 +1,4 @@
-package format
+package formatter
 
 import t "../tokeniser"
 import "core:fmt"
