@@ -1,7 +1,5 @@
 # An interpreted programming language
 
-notes: f strings can encoded as the keyword `f` requiring to be followed by a string
-
 problem: lua sucks
 stakeholders: people learning to code or looking to integrate a scripting language into their project
 
