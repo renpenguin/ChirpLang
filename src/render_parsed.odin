@@ -44,9 +44,9 @@ render_expression :: proc(expr: parser.Expression) {
 	#partial switch _ in expr {
 		case parser.Operation:
 			op := expr.(parser.Operation)
-			fmt.print("Operation{left = ")
+			fmt.print("Operation{")
 			render_expression(op.left^)
-			fmt.print(", op = ",op.op, ", right = ", sep = "")
+			fmt.print(" [",op.op, "] ", sep = "")
 			render_expression(op.right^)
 			fmt.print("}")
 
