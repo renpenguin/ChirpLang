@@ -36,7 +36,13 @@ main :: proc() {
 	fmt.println(tokens)
 
 	block, err := parser.parse(tokens)
-	if !err.ok do fmt.println("Error while parsing: ", err.error_msg, ", found ", err.found, sep = "")
+	if !err.ok {
+		if found, ok := err.found.?; ok {
+			fmt.println("Error while parsing: ", err.error_msg, ", found ", found, sep = "")
+		} else {
+			fmt.println("Error while parsing: ", err.error_msg, sep = "")
+		}
+	}
 
 	fmt.println("\n=== Parsed: ===")
 	render_block(block)
