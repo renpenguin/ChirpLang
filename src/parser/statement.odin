@@ -56,8 +56,7 @@ capture_block :: proc(
 	)
 	if !err.ok do return
 
-	captured_tokens: TokenStream
-	defer delete(captured_tokens)
+	captured_tokens: TokenStream // Deleted by `parse()`
 	bracket_depth := 1
 
 	for bracket_depth > 0 {

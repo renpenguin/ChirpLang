@@ -3,9 +3,7 @@ package parser
 import t "../tokeniser"
 import "core:fmt"
 
-// Block of code delimited by `{}`
-Block :: distinct [dynamic]Statement
-
+// Parses the `TokenStream` into a `Block`. If an error occurs, it is returned via the `err` field which should be handled. Consumes the `TokenStream`
 parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err := ParseError{ok = true}) {
 	using t
 
@@ -66,6 +64,7 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err := ParseError{
 		if !err.ok do return
 		append(&instructions, Statement(expr))
 	}
+	delete(tokens)
 
 	return
 }

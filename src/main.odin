@@ -30,9 +30,9 @@ main :: proc() {
 	}
 
 	tokens := tokeniser.tokenise(#load("../examples/hello_world.lc", string))
-	defer tokeniser.destroy_token_stream(tokens)
 
 	block, err := parser.parse(tokens)
+	defer parser.destroy_block(block)
 	if !err.ok {
 		if found, ok := err.found.?; ok {
 			fmt.eprintln("Error while parsing: ", err.error_msg, ", found ", found, sep = "")
