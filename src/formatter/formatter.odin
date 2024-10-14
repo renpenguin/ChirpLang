@@ -6,10 +6,10 @@ import "core:strings"
 import "core:unicode/utf8"
 
 // Parses the token stream back into a human-readable string
+@(deferred_out = delete_string)
 format :: proc(tokens: t.TokenStream) -> string {
 	using t
 	sb := strings.builder_make()
-	defer strings.builder_destroy(&sb)
 
 	previous_token: Token
 	indent := 0
