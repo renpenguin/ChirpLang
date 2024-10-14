@@ -18,7 +18,8 @@ BuiltInKeyword :: enum {
 	FString,
 }
 
-CustomKeyword :: distinct string // Reference or definition of variables/parameters/functions
+// Reference or definition of variables/parameters/functions. Parts are separated by `:`. Each part begins with a letter, and can contain letters, digits or `_`
+CustomKeyword :: distinct string
 
 Keyword :: distinct union {
 	BuiltInKeyword,
@@ -35,12 +36,15 @@ try_parse_keyword :: proc(input_chars: []rune, char_index: ^int) -> (keyword: Ke
 
 	append(&keyword_runes, c)
 
+	last_c := c
 	for j := char_index^ + 1; j < len(input_chars); j += 1 {
 		c := input_chars[j]
 		if unicode.is_letter(c) || unicode.is_number(c) || c == '_' || c == ':' {
-			append(&keyword_runes, c)
-			if c == '=' {
+			if last_c == ':' && !unicode.is_letter(c) {
+				panic("all keywords should begin with a letter, not a digit, _ or :")
 			}
+			append(&keyword_runes, c)
+			last_c = c
 			char_index^ += 1
 		} else {
 			break
