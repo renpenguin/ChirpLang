@@ -12,7 +12,7 @@ destroy_block :: proc(block: Block) {
 		case Import:
 			import_statement := instruction.(Import)
 			for library in import_statement {
-				delete(string(library))
+				destroy_name_ref(library)
 			}
 			delete(import_statement)
 		case VariableDefinition:
@@ -22,7 +22,7 @@ destroy_block :: proc(block: Block) {
 
 		case VariableAssignment:
 			var_ass := instruction.(VariableAssignment)
-			delete(string(var_ass.target_var))
+			destroy_name_ref(var_ass.target_var)
 			destroy_expression(var_ass.expr)
 
 		case FunctionDefinition:
@@ -51,7 +51,7 @@ destroy_expression :: proc(expr: Expression) {
 	switch _ in expr {
 	case FunctionCall:
 		func_call := expr.(FunctionCall)
-		delete(string(func_call.name))
+		destroy_name_ref(func_call.name)
 		for arg in func_call.args {
 			destroy_expression(arg)
 		}
@@ -67,7 +67,7 @@ destroy_expression :: proc(expr: Expression) {
 	case t.Literal:
 		str_literal, ok := expr.(t.Literal).(string)
 		if ok do delete(str_literal)
-	case t.CustomKeyword:
-		delete(string(expr.(t.CustomKeyword)))
+	case NameReference:
+		destroy_name_ref(expr.(NameReference))
 	}
 }

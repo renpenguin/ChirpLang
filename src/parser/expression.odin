@@ -5,7 +5,7 @@ import "core:fmt"
 
 // Calls a function with the given name and passes a list of arguments. Expected pattern `$name$($expr$, ...)``
 FunctionCall :: struct {
-	name: t.CustomKeyword,
+	name: NameReference,
 	args: [dynamic]Expression,
 }
 
@@ -22,7 +22,7 @@ Expression :: union {
 	Operation,
 	FormatString,
 	t.Literal,
-	t.CustomKeyword,
+	NameReference,
 }
 
 // Builds an Expression out of the loaded tokens
@@ -91,7 +91,7 @@ build_expression :: proc(
 			if i + 1 < len(tokens) && tokens[i + 1] == Token(Bracket{.Round, .Opening}) {
 				i += 1
 				func_call := FunctionCall {
-					name = custom_keyword,
+					name = keyword_to_name_ref(custom_keyword),
 				}
 
 				was_comma := true
@@ -106,7 +106,7 @@ build_expression :: proc(
 				to_store = func_call
 
 			} else {
-				to_store = custom_keyword
+				to_store = keyword_to_name_ref(custom_keyword)
 			}
 		} else if tokens[i] == Token(Bracket{.Round, .Opening}) { 	// Nested expression
 			was_comma: bool

@@ -3,25 +3,25 @@ package parser
 import t "../tokeniser"
 
 // Brings libraries or functions into scope. Expected pattern `import $library$, ...;`
-Import :: distinct [dynamic]t.CustomKeyword
+Import :: distinct [dynamic]NameReference
 
 // Defines a new variable in the current scope. Expected pattern `var $name$ = $expr$;`
 VariableDefinition :: struct {
-	name: t.CustomKeyword,
+	name: NameDefinition,
 	expr: Expression,
 }
 
 // Operation that either is or ends with `=`. Expected pattern `$name$ $operator$ $expr$;`
 VariableAssignment :: struct {
-	target_var: t.CustomKeyword,
+	target_var: NameReference,
 	operator:   t.AssignmentOperator,
 	expr:       Expression,
 }
 
 // Defines a function. Expected pattern `func $name$($name$, ...) $block$`
 FunctionDefinition :: struct {
-	name:  t.CustomKeyword,
-	args:  [dynamic]t.CustomKeyword,
+	name:  NameDefinition,
+	args:  [dynamic]NameDefinition,
 	block: Block,
 }
 
@@ -94,7 +94,7 @@ try_match_import :: proc(
 		)
 		if !err.ok do return
 
-		append(&import_statement.?, keyword)
+		append(&import_statement.?, keyword_to_name_ref(keyword))
 
 		char_index^ += 1
 		if is_new_line(tokens[char_index^]) do break
@@ -123,7 +123,7 @@ try_match_func_definition :: proc(
 	func_def: FunctionDefinition
 
 	char_index^ += 1
-	func_def.name, err = expect_custom_keyword(
+	func_def.name, err = expect_name_def(
 		tokens[char_index^],
 		"Expected function name in function definition",
 	)
@@ -140,8 +140,8 @@ try_match_func_definition :: proc(
 	for {
 		char_index^ += 1
 		if tokens[char_index^] == Token(Bracket{.Round, .Closing}) do break
-		arg_name: CustomKeyword
-		arg_name, err = expect_custom_keyword(
+		arg_name: NameDefinition
+		arg_name, err = expect_name_def(
 			tokens[char_index^],
 			"Expected argument name in function definition",
 		)
@@ -180,7 +180,7 @@ try_match_var_definition :: proc(
 	var_def := &var_definition.?
 
 	char_index^ += 1
-	var_def.name, err = expect_custom_keyword(
+	var_def.name, err = expect_name_def(
 		tokens[char_index^],
 		"Expected variable name after `var` in variable definition",
 	)
@@ -225,7 +225,7 @@ try_match_var_assignment :: proc(
 	if !err.ok do return
 
 	var_assignment = VariableAssignment {
-		target_var = var_name,
+		target_var = keyword_to_name_ref(var_name),
 		operator   = ass_op,
 		expr       = expr,
 	}
