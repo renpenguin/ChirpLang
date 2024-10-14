@@ -55,14 +55,6 @@ tokenise_next_char :: proc(tokens: ^TokenStream, input_chars: []rune, char_index
 	if c == '\n' || c == ';' {
 		append_new_line(tokens)
 		return
-	} else if len(tokens) > 0 {
-		// If immediately after { and not newline, add a newline first
-		bracket, was_bracket := tokens[len(tokens) - 1].(Bracket)
-		if was_bracket {
-			if (bracket == Bracket{.Curly, .Opening}) {
-				append_new_line(tokens)
-			}
-		}
 	}
 
 	// Literals

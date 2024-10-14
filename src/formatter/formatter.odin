@@ -14,6 +14,14 @@ format :: proc(tokens: t.TokenStream) -> string {
 	previous_token: Token
 	indent := 0
 	for token in tokens {
+		// If the previous token was a `{` and the current one isn't a new line, print one in:
+		if previous_token == Token(Bracket{.Curly, .Opening}) && !is_new_line(token) {
+			strings.write_rune(&sb, '\n')
+			for i := 0; i < indent; i += 1 {
+				strings.write_rune(&sb, '\t')
+			}
+		}
+
 		switch _ in token {
 		case Operator:
 			strings.write_rune(&sb, ' ')
