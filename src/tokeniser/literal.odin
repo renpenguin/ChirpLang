@@ -51,6 +51,8 @@ try_match_to_literal :: proc(
 				char_index^ += 1
 				j += 1
 				append(&string_runes, input_chars[j])
+			case '\n':
+				panic("String literals cannot take up multiple lines")
 			case:
 				append(&string_runes, c)
 			}
