@@ -1,16 +1,1 @@
-import math, random
-
-func main() {
-	print("hi!")
-	var dice_roll = random:range(1,5 + 1)
-	print(f"Dice roll: {dice_roll}")
-
-	var num = 0
-	forever {
-		num += math:constants:pi / (3.0 * 4.0)
-		print(f"Repeated { num } times")
-
-		var sin_num = math:sin(num)
-		print(f"sin({ num }) = { sin_num }")
-	}
-}
+print("Hello world!")
