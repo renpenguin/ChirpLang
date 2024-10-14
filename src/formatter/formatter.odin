@@ -9,6 +9,7 @@ import "core:unicode/utf8"
 format :: proc(tokens: t.TokenStream) -> string {
 	using t
 	sb := strings.builder_make()
+	defer strings.builder_destroy(&sb)
 
 	previous_token: Token
 	indent := 0

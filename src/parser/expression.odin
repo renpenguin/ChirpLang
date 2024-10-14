@@ -25,60 +25,6 @@ Expression :: union {
 	t.CustomKeyword,
 }
 
-// Captures all `Token`s until a newline into an `Expression`
-@(private)
-capture_expression :: proc(
-	tokens: t.TokenStream,
-	token_index: ^int,
-) -> (
-	expr: Expression,
-	err: ParseError,
-) {
-	captured_tokens: t.TokenStream
-	defer delete(captured_tokens)
-
-	for token_index^ < len(tokens) {
-		if t.is_new_line(tokens[token_index^]) do break
-
-		append(&captured_tokens, tokens[token_index^])
-		token_index^ += 1
-	}
-
-	return build_expression(captured_tokens)
-}
-
-// Captures all `Token`s until a newline or comma into an `Expression`. The last value will be true if it was a comma
-@(private = "file")
-capture_arg_until_closing_bracket :: proc(
-	tokens: t.TokenStream,
-	token_index: ^int,
-) -> (
-	expr: Expression,
-	err: ParseError,
-	was_comma: bool,
-) {
-	using t
-	captured_tokens: TokenStream
-	defer delete(captured_tokens)
-
-	bracket_depth := 1
-	for bracket_depth > 0 {
-		token_index^ += 1
-		token := tokens[token_index^]
-		if token == Token(Bracket{.Round, .Opening}) do bracket_depth += 1
-		if token == Token(Bracket{.Round, .Closing}) do bracket_depth -= 1
-
-		append(&captured_tokens, token)
-		if token == Token(Comma) && bracket_depth == 1 {
-			was_comma = true
-			break
-		}
-	}
-	pop(&captured_tokens) // Remove last )
-
-	return build_expression(captured_tokens), was_comma
-}
-
 // Builds an Expression out of the loaded tokens
 build_expression :: proc(
 	tokens: t.TokenStream,
@@ -203,4 +149,58 @@ build_expression :: proc(
 	}
 
 	return
+}
+
+// Captures all `Token`s until a newline into an `Expression`
+@(private)
+capture_expression :: proc(
+	tokens: t.TokenStream,
+	token_index: ^int,
+) -> (
+	expr: Expression,
+	err: ParseError,
+) {
+	captured_tokens: t.TokenStream
+	defer delete(captured_tokens)
+
+	for token_index^ < len(tokens) {
+		if t.is_new_line(tokens[token_index^]) do break
+
+		append(&captured_tokens, tokens[token_index^])
+		token_index^ += 1
+	}
+
+	return build_expression(captured_tokens)
+}
+
+// Captures all `Token`s until a newline or comma into an `Expression`. The last value will be true if it was a comma
+@(private = "file")
+capture_arg_until_closing_bracket :: proc(
+	tokens: t.TokenStream,
+	token_index: ^int,
+) -> (
+	expr: Expression,
+	err: ParseError,
+	was_comma: bool,
+) {
+	using t
+	captured_tokens: TokenStream
+	defer delete(captured_tokens)
+
+	bracket_depth := 1
+	for bracket_depth > 0 {
+		token_index^ += 1
+		token := tokens[token_index^]
+		if token == Token(Bracket{.Round, .Opening}) do bracket_depth += 1
+		if token == Token(Bracket{.Round, .Closing}) do bracket_depth -= 1
+
+		append(&captured_tokens, token)
+		if token == Token(Comma) && bracket_depth == 1 {
+			was_comma = true
+			break
+		}
+	}
+	pop(&captured_tokens) // Remove last )
+
+	return build_expression(captured_tokens), was_comma
 }
