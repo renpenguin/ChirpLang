@@ -29,7 +29,13 @@ main :: proc() {
 		}
 	}
 
-	tokens := tokeniser.tokenise(#load("../examples/hello_world.lc", string))
+	tokens := tokeniser.tokenise(#load("../examples/forever.lc", string))
+
+	fmt.println("\n=== Tokenised: ===")
+	fmt.println(tokens)
+
+	fmt.println("\n=== Formatted: ===")
+	fmt.println(formatter.format(tokens))
 
 	block, err := parser.parse(tokens)
 	defer parser.destroy_block(block)
@@ -41,6 +47,6 @@ main :: proc() {
 		}
 	}
 
-	fmt.println("\n=== Parsed: ===")
+	fmt.println("=== Parsed: ===")
 	formatter.display_block(block)
 }
