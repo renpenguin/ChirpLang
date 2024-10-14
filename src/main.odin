@@ -7,7 +7,7 @@ import "parser"
 import "tokeniser"
 
 main :: proc() {
-	when ODIN_DEBUG { // Memory Allocation Tracker
+	when ODIN_DEBUG { 	// Memory Allocation Tracker
 		track: mem.Tracking_Allocator
 		mem.tracking_allocator_init(&track, context.allocator)
 		context.allocator = mem.tracking_allocator(&track)

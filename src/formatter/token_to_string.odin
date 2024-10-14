@@ -39,12 +39,12 @@ builtin_keyword_to_string :: proc(keyword: t.BuiltInKeyword) -> string {
 
 bracket_to_rune :: proc(bracket: t.Bracket) -> rune {
 	switch bracket {
-	case t.Bracket { .Round, .Opening }: return '('
-	case t.Bracket { .Round, .Closing }: return ')'
-	case t.Bracket { .Square, .Opening }: return '['
-	case t.Bracket { .Square, .Closing }: return ']'
-	case t.Bracket { .Curly, .Opening }: return '{'
-	case t.Bracket { .Curly, .Closing }: return '}'
+	case t.Bracket{.Round, .Opening}: return '('
+	case t.Bracket{.Round, .Closing}: return ')'
+	case t.Bracket{.Square, .Opening}: return '['
+	case t.Bracket{.Square, .Closing}: return ']'
+	case t.Bracket{.Curly, .Opening}: return '{'
+	case t.Bracket{.Curly, .Closing}: return '}'
 	}
 
 	panic("Unreachable")

@@ -13,9 +13,9 @@ VariableDefinition :: struct {
 
 // Operation that either is or ends with `=`. Expected pattern `$name$ $operator$ $expr$;`
 VariableAssignment :: struct {
-	target_var: NameReference,
-	operator:   t.AssignmentOperator,
-	expr:       Expression,
+	target:   NameReference,
+	operator: t.AssignmentOperator,
+	expr:     Expression,
 }
 
 // Defines a function. Expected pattern `func $name$($name$, ...) $block$`
@@ -225,9 +225,9 @@ try_match_var_assignment :: proc(
 	if !err.ok do return
 
 	var_assignment = VariableAssignment {
-		target_var = keyword_to_name_ref(var_name),
-		operator   = ass_op,
-		expr       = expr,
+		target   = keyword_to_name_ref(var_name),
+		operator = ass_op,
+		expr     = expr,
 	}
 
 	return

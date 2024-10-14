@@ -34,7 +34,7 @@ display_block :: proc(block: parser.Block, indent := 0) {
 			fmt.println()
 		case VariableAssignment:
 			var_ass := instruction.(VariableAssignment)
-			fmt.print("[VarAss]", name_ref_to_string(var_ass.target_var), "[", var_ass.operator, "] ")
+			fmt.print("[VarAss]", name_ref_to_string(var_ass.target), "[", var_ass.operator, "] ")
 			display_expression(var_ass.expr)
 			fmt.println()
 		case Expression:
@@ -95,4 +95,4 @@ name_ref_to_string :: proc(name_ref: parser.NameReference) -> string {
 
 	return strings.to_string(sb)
 }
-delete_string :: proc(str: string) { delete(str) }
+delete_string :: proc(str: string) {delete(str)}

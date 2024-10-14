@@ -22,7 +22,7 @@ destroy_block :: proc(block: Block) {
 
 		case VariableAssignment:
 			var_ass := instruction.(VariableAssignment)
-			destroy_name_ref(var_ass.target_var)
+			destroy_name_ref(var_ass.target)
 			destroy_expression(var_ass.expr)
 
 		case FunctionDefinition:
