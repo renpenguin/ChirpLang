@@ -10,8 +10,8 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err := ParseError{
 	for i := 0; i < len(tokens); i += 1 {
 		if is_new_line(tokens[i]) do continue
 
-		// Import
-		import_statement: Maybe(Import)
+		// Import statement
+		import_statement: Maybe(ImportStatement)
 		import_statement, err = try_match_import(tokens, &i)
 		if !err.ok do return
 		if statement, ok := import_statement.?; ok {

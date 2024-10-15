@@ -14,9 +14,9 @@ display_block :: proc(block: parser.Block, indent := 0) {
 		}
 
 		#partial switch _ in instruction {
-		case Import:
+		case ImportStatement:
 			fmt.print("[Import]")
-			for lib in instruction.(Import) {
+			for lib in instruction.(ImportStatement) {
 				fmt.printf(" [%v]", name_ref_to_string(lib))
 			}
 			fmt.println()

@@ -9,8 +9,8 @@ Block :: distinct [dynamic]Statement
 destroy_block :: proc(block: Block) {
 	for instruction in block {
 		switch _ in instruction {
-		case Import:
-			import_statement := instruction.(Import)
+		case ImportStatement:
+			import_statement := instruction.(ImportStatement)
 			for library in import_statement {
 				destroy_name_ref(library)
 			}

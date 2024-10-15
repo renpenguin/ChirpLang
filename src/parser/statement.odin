@@ -3,7 +3,7 @@ package parser
 import t "../tokeniser"
 
 // Brings libraries or functions into scope. Expected pattern `import $library$, ...;`
-Import :: distinct [dynamic]NameReference
+ImportStatement :: distinct [dynamic]NameReference
 
 // Defines a new variable in the current scope. Expected pattern `var $name$ = $expr$;`
 VariableDefinition :: struct {
@@ -31,7 +31,7 @@ Forever :: struct {
 }
 
 Statement :: union {
-	Import,
+	ImportStatement,
 	VariableDefinition,
 	VariableAssignment,
 	FunctionDefinition,
@@ -72,18 +72,18 @@ capture_block :: proc(
 	return parse(captured_tokens)
 }
 
-// Try to match an `Import` statement under the cursor
+// Try to match an `ImportStatement` under the cursor
 @(private)
 try_match_import :: proc(
 	tokens: t.TokenStream,
 	char_index: ^int,
 ) -> (
-	import_statement: Maybe(Import),
+	import_statement: Maybe(ImportStatement),
 	err := ParseError{ok = true},
 ) {
 	using t
 	if tokens[char_index^] != Token(Keyword(.Import)) do return
-	import_statement = Import{}
+	import_statement = ImportStatement{}
 
 	for {
 		char_index^ += 1
