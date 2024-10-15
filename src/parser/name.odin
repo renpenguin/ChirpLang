@@ -18,16 +18,16 @@ expect_name_def :: proc(
 	not_keyword_error_msg: string,
 ) -> (
 	name_def: NameDefinition,
-	err: ParseError,
+	err: SyntaxError,
 ) {
 	keyword: t.CustomKeyword
 	keyword, err = expect_custom_keyword(token, not_keyword_error_msg)
 	if strings.contains_rune(string(keyword), ':') {
 		return NameDefinition(
 			"",
-		), ParseError{error_msg = "Expected name definition (no path reference `:`)", found = t.Token(t.Keyword(keyword))}
+		), SyntaxError{error_msg = "Expected name definition (no path reference `:`)", found = t.Token(t.Keyword(keyword))}
 	} else {
-		return NameDefinition(keyword), ParseError{ok = true}
+		return NameDefinition(keyword), SyntaxError{ok = true}
 	}
 }
 

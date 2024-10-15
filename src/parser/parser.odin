@@ -4,7 +4,7 @@ import t "../tokeniser"
 import "core:fmt"
 
 // Parses the `TokenStream` into a `Block`. If an error occurs, it is returned via the `err` field which should be handled. Consumes the `TokenStream`
-parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err := ParseError{ok = true}) {
+parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err := SyntaxError{ok = true}) {
 	using t
 
 	for i := 0; i < len(tokens); i += 1 {

@@ -46,7 +46,7 @@ capture_block :: proc(
 	token_index: ^int,
 ) -> (
 	block: Block,
-	err: ParseError,
+	err: SyntaxError,
 ) {
 	using t
 	err = expect_token(
@@ -79,7 +79,7 @@ try_match_import :: proc(
 	char_index: ^int,
 ) -> (
 	import_statement: Maybe(ImportStatement),
-	err := ParseError{ok = true},
+	err := SyntaxError{ok = true},
 ) {
 	using t
 	if tokens[char_index^] != Token(Keyword(.Import)) do return
@@ -116,7 +116,7 @@ try_match_func_definition :: proc(
 	char_index: ^int,
 ) -> (
 	func_definition: Maybe(FunctionDefinition),
-	err := ParseError{ok = true},
+	err := SyntaxError{ok = true},
 ) {
 	using t
 	if tokens[char_index^] != Token(Keyword(.Func)) do return
@@ -172,7 +172,7 @@ try_match_var_definition :: proc(
 	char_index: ^int,
 ) -> (
 	var_definition: Maybe(VariableDefinition),
-	err := ParseError{ok = true},
+	err := SyntaxError{ok = true},
 ) {
 	using t
 	if tokens[char_index^] != Token(Keyword(.Var)) do return
@@ -208,7 +208,7 @@ try_match_var_assignment :: proc(
 	char_index: ^int,
 ) -> (
 	var_assignment: Maybe(VariableAssignment),
-	err := ParseError{ok = true},
+	err := SyntaxError{ok = true},
 ) {
 	var_name, custom_keyword_err := expect_custom_keyword(tokens[char_index^], "")
 	if !custom_keyword_err.ok do return

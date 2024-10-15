@@ -2,10 +2,12 @@ package parser
 
 import t "../tokeniser"
 
-// Potential error returned by `parser` library functions
-ParseError :: struct {
+// Potential syntax error
+SyntaxError :: struct {
 	error_msg: string,
+	// The keyword to blame. Helpful for giving the user more context about the error (should every keyword contain a (line,column) property for errors?)
 	found:     Maybe(t.Token),
+	// Whether the code ran fine actually. When `false`, an error has occured
 	ok:        bool,
 }
 
@@ -17,7 +19,7 @@ expect_custom_keyword :: proc(
 	error_msg: string,
 ) -> (
 	keyword: t.CustomKeyword,
-	err := ParseError{ok = true},
+	err := SyntaxError{ok = true},
 ) {
 	kw, ok := token.(t.Keyword)
 	if ok {
@@ -25,12 +27,12 @@ expect_custom_keyword :: proc(
 		if ok do return
 	}
 
-	return t.CustomKeyword(""), ParseError{error_msg = error_msg, found = token}
+	return t.CustomKeyword(""), SyntaxError{error_msg = error_msg, found = token}
 }
 
 // Ensure that the passed tokens match, and return an error if they dont
 @(require_results)
 @(private)
-expect_token :: proc(token, expected_token: t.Token, error_msg: string) -> (err: ParseError) {
-	return ParseError{error_msg = error_msg, found = token, ok = token == expected_token}
+expect_token :: proc(token, expected_token: t.Token, error_msg: string) -> (err: SyntaxError) {
+	return SyntaxError{error_msg = error_msg, found = token, ok = token == expected_token}
 }

@@ -41,9 +41,9 @@ main :: proc() {
 	defer parser.destroy_block(block)
 	if !err.ok {
 		if found, ok := err.found.?; ok {
-			fmt.eprintln("Error while parsing: ", err.error_msg, ", found ", found, sep = "")
+			fmt.eprintln("Syntax error: ", err.error_msg, ", found ", found, sep = "")
 		} else {
-			fmt.eprintln("Error while parsing: ", err.error_msg, sep = "")
+			fmt.eprintln("Syntax error: ", err.error_msg, sep = "")
 		}
 	}
 
