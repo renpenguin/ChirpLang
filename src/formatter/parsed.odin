@@ -88,8 +88,8 @@ display_expression :: proc(expr: parser.Expression) {
 name_ref_to_string :: proc(name_ref: parser.NameReference) -> string {
 	sb := strings.builder_make()
 	// defer strings.builder_destroy(&sb)
-	if scope, ok := name_ref.scope.?; ok {
-		for namespace in scope {
+	if path, ok := name_ref.path.?; ok {
+		for namespace in path {
 			strings.write_string(&sb, string(namespace))
 			strings.write_rune(&sb, ':')
 		}

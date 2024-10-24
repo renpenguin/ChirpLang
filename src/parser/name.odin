@@ -8,7 +8,7 @@ import "core:strings"
 NameDefinition :: distinct string
 
 NameReference :: struct {
-	scope: Maybe([dynamic]NameDefinition),
+	path: Maybe([dynamic]NameDefinition),
 	// The actual name being accessed. Begins with a letter, can contain letters, digits or an `_`
 	name:  NameDefinition,
 }
@@ -56,11 +56,11 @@ keyword_to_name_ref :: proc(keyword: t.CustomKeyword) -> NameReference {
 }
 
 destroy_name_ref :: proc(declared_name: NameReference) {
-	if scope, ok := declared_name.scope.?; ok {
-		for path_step in scope {
+	if path, ok := declared_name.path.?; ok {
+		for path_step in path {
 			delete(string(path_step))
 		}
-		delete(scope)
+		delete(path)
 	}
 	delete(string(declared_name.name))
 }
