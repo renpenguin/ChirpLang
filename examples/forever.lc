@@ -5,7 +5,7 @@ func main() {
 	var dice_roll = random:range(1,5 + 1)
 	print(f"Dice roll: {dice_roll}")
 
-	var num = 0
+	var num = 0.0
 	forever {
 		num += math:constants:pi / (3.0 * 4.0)
 		print(f"Repeated { num } times")

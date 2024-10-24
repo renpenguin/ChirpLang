@@ -15,13 +15,13 @@ find_scope_at_path :: proc(
 	found_scope = scope
 
 	path_reader: for dir in path {
-		for module in scope.modules {
+		for module in found_scope.modules {
 			if module.name == dir {
 				found_scope = module.scope
 				continue path_reader
 			}
 		}
-		for module in scope.parent_scope.modules {
+		for module in found_scope.parent_scope.modules {
 			if module.name == dir {
 				found_scope = module.scope
 				continue path_reader

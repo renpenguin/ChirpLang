@@ -43,6 +43,9 @@ build_scope :: proc(
 		}
 
 		if func_declaration, ok := instruction.(p.FunctionDefinition); ok {
+			err = evaluate_block_with_scope(func_declaration.block, scope)
+			if err != nil do return
+
 			append(&scope.functions, InterpretedFunction{func_declaration, &scope})
 		}
 
