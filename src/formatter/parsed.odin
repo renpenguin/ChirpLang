@@ -61,13 +61,16 @@ display_expression :: proc(expr: parser.Expression) {
 
 	case FunctionCall:
 		func_call := expr.(FunctionCall)
-		fmt.print("FunctionCall{ ", name_ref_to_string(func_call.name), ", ", sep = "")
+		fmt.print("FunctionCall{", name_ref_to_string(func_call.name))
 
-		for arg in func_call.args[:len(func_call.args) - 1] {
-			display_expression(arg)
+		if len(func_call.args) > 0 {
 			fmt.print(", ")
+			for arg in func_call.args[:len(func_call.args) - 1] {
+				display_expression(arg)
+				fmt.print(", ")
+			}
+			display_expression(func_call.args[len(func_call.args) - 1])
 		}
-		display_expression(func_call.args[len(func_call.args) - 1])
 		fmt.print(" }")
 
 	case FormatString:

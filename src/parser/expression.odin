@@ -96,11 +96,10 @@ build_expression :: proc(
 
 				was_comma := true
 				for was_comma {
-					arg: Expression
-					arg, err, was_comma = capture_arg_until_closing_bracket(tokens, &i)
+					found_arg: Maybe(Expression)
+					found_arg, err, was_comma = capture_arg_until_closing_bracket(tokens, &i)
 					if !err.ok do return
-
-					append(&func_call.args, arg)
+					if arg, ok := found_arg.?; ok do append(&func_call.args, arg)
 				}
 
 				to_store = func_call
@@ -112,6 +111,7 @@ build_expression :: proc(
 			was_comma: bool
 			to_store, err, was_comma = capture_arg_until_closing_bracket(tokens, &i)
 			if !err.ok do return
+			if to_store == nil do return nil, SyntaxError{error_msg = "Invalid expression: found empty expression `()`"}
 			if was_comma do return nil, SyntaxError{error_msg = "Invalid expression: comma found separating values in expression"}
 		}
 
@@ -173,13 +173,13 @@ capture_expression :: proc(
 	return build_expression(captured_tokens)
 }
 
-// Captures all `Token`s until a newline or comma into an `Expression`. The last value will be true if it was a comma
+// Captures all `Token`s until a newline or comma into an `Expression`. The last value will be true if it was a comma. If no expression is found in the closing bracket, the returned Maybe(Expression) will be nil
 @(private = "file")
 capture_arg_until_closing_bracket :: proc(
 	tokens: t.TokenStream,
 	token_index: ^int,
 ) -> (
-	expr: Expression,
+	expr: Maybe(Expression),
 	err: SyntaxError,
 	was_comma: bool,
 ) {
@@ -200,7 +200,9 @@ capture_arg_until_closing_bracket :: proc(
 			break
 		}
 	}
-	pop(&captured_tokens) // Remove last )
+	pop(&captured_tokens) // Remove last `)`
+
+	if len(captured_tokens) == 0 do return nil, SyntaxError{ok=true}, was_comma
 
 	return build_expression(captured_tokens), was_comma
 }
