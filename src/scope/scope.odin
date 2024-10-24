@@ -43,7 +43,13 @@ build_scope :: proc(
 		}
 
 		if func_declaration, ok := instruction.(p.FunctionDefinition); ok {
-			err = evaluate_block_with_scope(func_declaration.block, scope)
+			function_scope := Scope {
+				parent_scope = &scope,
+			}
+			for arg in func_declaration.args {
+				append(&function_scope.constants, Variable{arg.name, p.None})
+			}
+			err = evaluate_block_with_scope(func_declaration.block, function_scope)
 			if err != nil do return
 
 			append(&scope.functions, InterpretedFunction{func_declaration, &scope})

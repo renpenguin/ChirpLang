@@ -3,6 +3,17 @@ package scope
 import "core:fmt"
 import p "../parser"
 
+find_module :: proc(scope: ^Scope, query: p.NameDefinition) -> (found_scope: Scope, ok: bool) {
+	for module in scope.modules {
+		if module.name == query {
+			return module.scope, true
+		}
+	}
+
+	if scope.parent_scope == nil do return
+	return find_module(scope.parent_scope, query)
+}
+
 find_scope_at_path :: proc(
 	scope: Scope,
 	path: []p.NameDefinition,
@@ -15,17 +26,9 @@ find_scope_at_path :: proc(
 	found_scope = scope
 
 	path_reader: for dir in path {
-		for module in found_scope.modules {
-			if module.name == dir {
-				found_scope = module.scope
-				continue path_reader
-			}
-		}
-		for module in found_scope.parent_scope.modules {
-			if module.name == dir {
-				found_scope = module.scope
-				continue path_reader
-			}
+		ok: bool
+		if found_scope, ok = find_module(&found_scope, dir); ok {
+			continue path_reader
 		}
 
 		err = ScopeError(path)

@@ -1,8 +1,8 @@
 import math, random
 
-func main() {
+func main(val) {
 	print("hi!")
-	var dice_roll = random:range(1,5 + 1)
+	var dice_roll = random:range(1,5 + val)
 	print(f"Dice roll: {dice_roll}")
 
 	var num = 0.0
@@ -15,4 +15,4 @@ func main() {
 	}
 }
 
-main()
+main(3)
