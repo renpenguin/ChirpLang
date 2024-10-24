@@ -8,7 +8,7 @@ find_scope_at_path :: proc(
 	path: []p.NameDefinition,
 ) -> (
 	found_scope: Scope,
-	err := ScopeError{ok = true},
+	err: ScopeError = nil,
 ) {
 	if len(path) == 0 do panic("Empty non-nil path in NameDefinition")
 
@@ -28,10 +28,8 @@ find_scope_at_path :: proc(
 			}
 		}
 
-		fmt.eprintln("Invalid path", path)
-		err = ScopeError {
-			error_msg = "Invalid path",
-		}
+		err = ScopeError(path)
+		return
 	}
 
 	return

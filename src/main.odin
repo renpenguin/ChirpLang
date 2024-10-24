@@ -54,8 +54,11 @@ main :: proc() {
 	fmt.println("=== Evaluating Scope ===")
 	std := scope.build_std_scope()
 	block_scope, scope_err := scope.build_scope(&block, &std)
-	if !scope_err.ok do fmt.eprintln("Scope error:", scope_err.error_msg)
-	scope_err = scope.evaluate_block_with_scope(block, block_scope)
-	if !scope_err.ok do fmt.eprintln("Scope error:", scope_err.error_msg)
+	switch _ in scope_err {
+	case []parser.NameDefinition:
+		fmt.println("Scope error: invalid path:", scope_err)
+	case parser.NameDefinition:
+		fmt.println("Scope error: couldn't find name at path:", scope_err)
+	}
 	formatter.display_block(block, ignore_scope_statements = true)
 }
