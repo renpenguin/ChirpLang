@@ -5,7 +5,7 @@ import "core:fmt"
 import "core:strings"
 
 // Prints a `parser.Block` to `stdout` in a pseudo language
-display_block :: proc(block: parser.Block, indent := 0) {
+display_block :: proc(block: parser.Block, indent := 0, ignore_scope_statements := false) {
 	using parser
 
 	for instruction in block {
@@ -15,12 +15,14 @@ display_block :: proc(block: parser.Block, indent := 0) {
 
 		#partial switch _ in instruction {
 		case ImportStatement:
+			if ignore_scope_statements do continue
 			fmt.print("[Import]")
 			for lib in instruction.(ImportStatement) {
 				fmt.printf(" [%v]", name_ref_to_string(lib))
 			}
 			fmt.println()
 		case FunctionDefinition:
+			if ignore_scope_statements do continue
 			func_def := instruction.(FunctionDefinition)
 			fmt.println("[FuncDef] ", func_def.name, func_def.args, ": ", sep = "")
 			display_block(func_def.block, indent + 1)
