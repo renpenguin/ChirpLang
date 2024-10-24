@@ -1,5 +1,6 @@
 import math, random
 
+//If there is no scope body, this function will be called automatically
 func main() {
 	print("hi!")
 	var dice_roll = random:range(1,5 + 1)

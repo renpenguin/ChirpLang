@@ -77,6 +77,11 @@ format :: proc(tokens: t.TokenStream) -> string {
 			for i := 0; i < indent; i += 1 {
 				strings.write_rune(&sb, '\t')
 			}
+
+		case Comment:
+			if !is_new_line(previous_token) && previous_token != Token(Bracket{.Curly, .Opening}) do strings.write_rune(&sb, ' ')
+			strings.write_string(&sb, "// ")
+			strings.write_string(&sb, string(token.(t.Comment)))
 		}
 
 		previous_token = token

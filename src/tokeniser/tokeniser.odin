@@ -27,6 +27,7 @@ Token :: union #no_nil {
 	Literal,
 	CommaType,
 	NewLineType,
+	Comment,
 }
 
 // Takes a block of code in the form of plain text as parameter and returns it as a dynamic array of tokens.
@@ -54,6 +55,12 @@ tokenise_next_char :: proc(tokens: ^TokenStream, input_chars: []rune, char_index
 	// Handle new lines
 	if c == '\n' || c == ';' {
 		append_new_line(tokens)
+		return
+	}
+
+	// Comments
+	if comment, ok := try_match_to_comment(input_chars, char_index); ok {
+		append(tokens, comment)
 		return
 	}
 
