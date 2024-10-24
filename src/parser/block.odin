@@ -64,9 +64,8 @@ destroy_expression :: proc(expr: Expression) {
 		free(operation.right)
 	case FormatString:
 		delete(string(expr.(FormatString)))
-	case t.Literal:
-		str_literal, ok := expr.(t.Literal).(string)
-		if ok do delete(str_literal)
+	case Value:
+		if str_value, ok := expr.(Value).(string); ok do delete(str_value)
 	case NameReference:
 		destroy_name_ref(expr.(NameReference))
 	}

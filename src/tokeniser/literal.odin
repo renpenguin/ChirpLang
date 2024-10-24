@@ -6,10 +6,10 @@ import "core:unicode/utf8"
 float :: f64
 
 Literal :: union #no_nil {
-	bool,
-	string,
 	int,
 	float,
+	string,
+	bool,
 }
 
 // Attempts to map the custom keyword onto a `true` or `false` literal. Consumes the keyword if successful

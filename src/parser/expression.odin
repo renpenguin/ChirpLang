@@ -17,11 +17,11 @@ Operation :: struct {
 FormatString :: distinct string
 
 // Block of code delimited by `()` that evaluates to one value
-Expression :: union {
+Expression :: union { // TODO: make no_nil
 	FunctionCall,
 	Operation,
 	FormatString,
-	t.Literal,
+	Value,
 	NameReference,
 }
 
@@ -72,7 +72,7 @@ build_expression :: proc(
 		}
 
 		if literal, ok := tokens[i].(Literal); ok { 	// Literal
-			to_store = literal
+			to_store = literal_to_value(literal)
 		} else if tokens[i] == Token(Keyword(.FString)) { 	// f-string
 			FSTRING_ERROR_MSG :: "Invalid expression: Expected string literal after `f` keyword"
 			if i + 1 >= len(tokens) do return nil, SyntaxError{error_msg = FSTRING_ERROR_MSG}
