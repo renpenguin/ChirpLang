@@ -29,7 +29,7 @@ destroy_block :: proc(block: Block) {
 			func_def := instruction.(FunctionDefinition)
 			delete(string(func_def.name))
 			for arg in func_def.args {
-				delete(string(arg))
+				delete(string(arg.name))
 			}
 			delete(func_def.args)
 			destroy_block(func_def.block)

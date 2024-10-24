@@ -18,11 +18,16 @@ VariableAssignment :: struct {
 	expr:     Expression,
 }
 
+FunctionArgument :: struct {
+	name: NameDefinition,
+	type: ValueType,
+}
 // Defines a function. Expected pattern `func $name$($name$, ...) $block$`
 FunctionDefinition :: struct {
-	name:  NameDefinition,
-	args:  [dynamic]NameDefinition,
-	block: Block,
+	name:        NameDefinition,
+	args:        [dynamic]FunctionArgument,
+	return_type: Maybe(ValueType),
+	block:       Block,
 }
 
 // Executes a block until `Break` is triggered. Expected patten `forever $block$`
@@ -147,7 +152,7 @@ try_match_func_definition :: proc(
 		)
 		if !err.ok do return
 
-		append(&func_def.args, arg_name)
+		append(&func_def.args, FunctionArgument{arg_name, .None}) // TODO: read function argument type
 
 		char_index^ += 1
 		if tokens[char_index^] == Token(Bracket{.Round, .Closing}) do break
