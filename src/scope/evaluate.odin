@@ -1,7 +1,7 @@
 package scope
 
-import "core:fmt"
 import p "../parser"
+import "core:fmt"
 
 // Make sure all involved blocks' instructions are only accessing values they have access to
 evaluate_block_with_scope :: proc(block: p.Block, scope: Scope) -> (err: ScopeError = nil) {
@@ -36,7 +36,7 @@ evaluate_block_with_scope :: proc(block: p.Block, scope: Scope) -> (err: ScopeEr
 }
 
 // Make sure the expression's elements are only accessing values they have access to
-@(private="file")
+@(private = "file")
 evaluate_expression_with_scope :: proc(
 	expr: p.Expression,
 	scope: Scope,
@@ -62,14 +62,13 @@ evaluate_expression_with_scope :: proc(
 		err = evaluate_expression_with_scope(op.right^, scope)
 		if err != nil do return
 	case p.NameReference:
-		fmt.println("evaluating name ref", expr.(p.NameReference))
 		err = evaluate_name_ref_with_scope(expr.(p.NameReference), scope)
 		if err != nil do return
 	}
 	return
 }
 
-@(private="file")
+@(private = "file")
 evaluate_name_ref_with_scope :: proc(
 	name_ref: p.NameReference,
 	scope: Scope,

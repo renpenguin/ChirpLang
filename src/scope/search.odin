@@ -35,7 +35,7 @@ find_scope_at_path :: proc(
 	return
 }
 
-search_scope :: proc(scope: ^Scope, query: p.NameDefinition, path_depth := 0) -> union {
+search_scope :: proc(scope: ^Scope, query: p.NameDefinition) -> union {
 		Module,
 		Function,
 		Variable,
