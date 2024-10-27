@@ -61,4 +61,8 @@ main :: proc() {
 		fmt.println("Scope error: couldn't find name at path:", scope_err)
 	}
 	formatter.display_block(block, ignore_scope_statements = true)
+
+	// if there is nothing aside from imports, functions and constants in the loaded block, set the main function as the primary block
+
+	// run the block!!
 }
