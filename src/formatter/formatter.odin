@@ -38,6 +38,10 @@ format :: proc(tokens: t.TokenStream) -> string {
 				builtin_keyword := builtin_keyword_to_string(keyword.(BuiltInKeyword))
 				strings.write_string(&sb, builtin_keyword)
 				defer delete(builtin_keyword)
+			case TypeKeyword:
+				type_keyword := type_keyword_to_string(keyword.(TypeKeyword))
+				strings.write_string(&sb, type_keyword)
+				defer delete(type_keyword)
 			case CustomKeyword:
 				strings.write_string(&sb, string(keyword.(CustomKeyword)))
 			}

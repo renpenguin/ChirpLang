@@ -1,7 +1,7 @@
 import math, random
 
 // func add(first int, second int) -> int {
-func add(first, second) { // review return syntax later
+func add(first int, second int) { // review return syntax later
 	return first + second
 }
 

@@ -1,10 +1,10 @@
 package execute
 
-import "core:fmt"
 import p "../parser"
 import s "../scope"
+import "core:fmt"
 
-execute_block :: proc(block: p.Block, scope: s.Scope) -> RuntimeError {
+execute_block :: proc(block: p.Block, scope: s.Scope) -> (err: RuntimeError) {
 	scope := scope
 	using p
 
@@ -12,20 +12,27 @@ execute_block :: proc(block: p.Block, scope: s.Scope) -> RuntimeError {
 		switch _ in instruction {
 		case VariableDefinition:
 			var_def := instruction.(p.VariableDefinition)
-			append(&scope.constants, s.Variable{
-				name = var_def.name,
-				contents = execute_expression(var_def.expr, &scope)
-			})
+
+			contents, err := execute_expression(var_def.expr, &scope)
+			if !is_runtime_error_ok(err) do return err
+
+			append(&scope.constants, s.Variable{name = var_def.name, contents = contents})
 		case VariableAssignment:
-			assign_operation(instruction.(p.VariableAssignment), &scope)
+			err = assign_operation(instruction.(p.VariableAssignment), &scope)
+			if !is_runtime_error_ok(err) do return err
 		case Forever:
 			forever_block := instruction.(Forever).block
 			for {
-				forever_scope := s.Scope{parent_scope=&scope}
-				execute_block(forever_block, forever_scope)
+				forever_scope := s.Scope {
+					parent_scope = &scope,
+				}
+				defer s.destroy_scope(forever_scope)
+				err = execute_block(forever_block, forever_scope)
+				if !is_runtime_error_ok(err) do return err
 			}
 		case Expression:
-			execute_expression(instruction.(Expression), &scope)
+			_, err = execute_expression(instruction.(Expression), &scope)
+			if !is_runtime_error_ok(err) do return err
 		case ImportStatement, FunctionDefinition:
 			break // Ignore
 		}
@@ -34,7 +41,13 @@ execute_block :: proc(block: p.Block, scope: s.Scope) -> RuntimeError {
 	return NoErrorUnit
 }
 
-execute_expression :: proc(expr: p.Expression, scope: ^s.Scope) -> (value: p.Value = p.None) {
+execute_expression :: proc(
+	expr: p.Expression,
+	scope: ^s.Scope,
+) -> (
+	value: p.Value = p.None,
+	err: RuntimeError = NoErrorUnit,
+) {
 	using p
 
 	switch _ in expr {
@@ -52,30 +65,57 @@ execute_expression :: proc(expr: p.Expression, scope: ^s.Scope) -> (value: p.Val
 			defer delete(values)
 
 			for expr in func_call.args {
-				append(&values, execute_expression(expr, scope))
+				arg, err := execute_expression(expr, scope)
+				if !is_runtime_error_ok(err) do return
+				append(&values, arg)
 			}
 
-			return_val, err := func_pointer(values)
-			if !err.ok do panic(err.msg)
-			return return_val
+			return func_pointer(values)
 
 		case s.InterpretedFunction:
-			panic("todo") // TODO: build scope for the function and execute its block with that scope
+			interp_func_def := func.(s.InterpretedFunction)
+
+			func_scope := s.Scope {
+				parent_scope = scope,
+			}
+			defer s.destroy_scope(func_scope)
+
+			if len(interp_func_def.args) != len(func_call.args) do return p.None, s.BuiltInFunctionError{msg="Incorrect number of arguments passed to function call"}
+			for def_arg, i in interp_func_def.args {
+				passed_arg: p.Value
+				passed_arg, err = execute_expression(func_call.args[i], scope)
+				if !is_runtime_error_ok(err) do return
+				if def_arg.type != get_value_type(passed_arg) do return p.None, s.BuiltInFunctionError{msg="Incorrect argument type"}
+
+				append(&func_scope.constants, s.Variable{def_arg.name, passed_arg})
+			}
+
+			err = execute_block(interp_func_def.block, func_scope)
+			if !is_runtime_error_ok(err) do return
 		}
 	case Operation:
 		op := expr.(p.Operation)
-		output, err := process_operation(execute_expression(op.left^, scope), execute_expression(op.right^, scope), op.op)
-		// TODO: handle type errors
-		return output
+
+		value1, value2, output: Value
+
+		value1, err = execute_expression(op.left^, scope)
+		if !is_runtime_error_ok(err) do return
+		value2, err = execute_expression(op.right^, scope)
+		if !is_runtime_error_ok(err) do return
+
+		output, err = process_operation(value1, value2, op.op)
+		if !is_runtime_error_ok(err) do return
+
+		return output, err
 	case FormatString:
 		panic("todo") // TODO: implement string formatting. code below should return a string
 	case Value:
-		return expr.(Value)
+		return expr.(Value), err
 	case NameReference:
 		name_ref := expr.(NameReference)
 		variable, _ := s.search_for_reference(scope, name_ref)
 
-		return variable.(^s.Variable).contents
+		return variable.(^s.Variable).contents, err
 	}
 
 	return

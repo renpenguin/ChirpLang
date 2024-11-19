@@ -64,7 +64,8 @@ main :: proc() {
 
 	// if there is nothing aside from imports, functions and constants in the loaded block, set the main function as the primary block
 
-	// run the block!!
-	fmt.println("=== Running ===")
-	execute.execute_block(block, block_scope)
+	err := execute.execute_block(block, block_scope)
+	if _, ok := err.(execute.NoError); !ok {
+		fmt.println("Runtime error:", err)
+	}
 }

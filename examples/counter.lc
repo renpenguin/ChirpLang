@@ -1,11 +1,13 @@
-func main() {
-	var counter = 0
+func count_from(starting_value int) {
+	var counter = starting_value
+
+	print("Counting from", counter)
 
 	forever {
 		counter += 1
-		print("We have now counted", counter - 1, "times")
+		print("We have now counted", counter, "times")
 		time:sleep(0.2)
 	}
 }
 
-main()
+count_from(0 - 1)

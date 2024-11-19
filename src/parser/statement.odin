@@ -152,7 +152,13 @@ try_match_func_definition :: proc(
 		)
 		if !err.ok do return
 
-		append(&func_def.args, FunctionArgument{arg_name, .None}) // TODO: read function argument type
+		char_index^ += 1
+		kw, kw_ok := tokens[char_index^].(Keyword)
+		if !kw_ok do return nil, SyntaxError{msg = "Expected argument type after argument name in function definition"}
+		tkw, tkw_ok := kw.(t.TypeKeyword)
+		if !tkw_ok do return nil, SyntaxError{msg = "Expected argument type after argument name in function definition"}
+
+		append(&func_def.args, FunctionArgument{arg_name, ValueType(tkw)})
 
 		char_index^ += 1
 		if tokens[char_index^] == Token(Bracket{.Round, .Closing}) do break

@@ -4,9 +4,11 @@ import p "../parser"
 import s "../scope"
 import t "../tokeniser"
 
-assign_operation :: proc(assignment: p.VariableAssignment, scope: ^s.Scope) {
+assign_operation :: proc(assignment: p.VariableAssignment, scope: ^s.Scope) -> (err: RuntimeError = NoErrorUnit) {
 	scope_item, _ := s.search_for_reference(scope, assignment.target)
 	variable := scope_item.(^s.Variable)
+
+	expr_result, new_val: p.Value
 
 	operator: t.ArithmeticOperator
 	switch assignment.operator {
@@ -19,19 +21,26 @@ assign_operation :: proc(assignment: p.VariableAssignment, scope: ^s.Scope) {
 	case .DivAssign:
 		operator = .Div
 	case .Assign:
-		new_val := execute_expression(assignment.expr, scope)
+		new_val, err = execute_expression(assignment.expr, scope)
+		if !is_runtime_error_ok(err) do return err
 		// TODO: type checking
 		variable.contents = new_val
 		return
 	}
 
-	new_val, err := process_operation(
-		variable.contents, // TODO: type checking here as well..?
-		execute_expression(assignment.expr, scope),
+	expr_result, err = execute_expression(assignment.expr, scope)
+	if !is_runtime_error_ok(err) do return err
+
+	new_val, err = process_operation(
+		variable.contents,
+		expr_result,
 		operator,
 	)
+	if !is_runtime_error_ok(err) do return err
 	// TODO: type checking
 	variable.contents = new_val
+
+	return
 }
 
 process_operation :: proc(

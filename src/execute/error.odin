@@ -19,3 +19,16 @@ RuntimeError :: union #no_nil {
 	s.BuiltInFunctionError,
 	NoError,
 }
+
+is_runtime_error_ok :: proc(err: RuntimeError) -> bool {
+	switch _ in err {
+	case TypeError:
+		return err.(TypeError).ok
+	case s.BuiltInFunctionError:
+		return err.(s.BuiltInFunctionError).ok
+	case NoError:
+		return true
+	case:
+		panic("Unreachable")
+	}
+}

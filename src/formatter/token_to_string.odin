@@ -37,6 +37,12 @@ builtin_keyword_to_string :: proc(keyword: t.BuiltInKeyword) -> string {
 	return strings.to_lower(formatted)
 }
 
+type_keyword_to_string :: proc(keyword: t.TypeKeyword) -> string {
+	formatted := fmt.aprint(keyword)
+	defer delete(formatted)
+	return strings.to_lower(formatted)
+}
+
 bracket_to_rune :: proc(bracket: t.Bracket) -> rune {
 	switch bracket {
 	case t.Bracket{.Round, .Opening}: return '('

@@ -5,15 +5,7 @@ import t "../tokeniser"
 NoneType :: struct {}
 None :: NoneType{}
 
-ValueType :: enum {
-	Int,
-	Float,
-	String,
-	Bool,
-	None,
-	// Array,
-	// Struct,
-}
+ValueType :: t.TypeKeyword
 Value :: union #no_nil {
 	int,
 	t.float,
