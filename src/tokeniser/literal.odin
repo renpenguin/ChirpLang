@@ -77,7 +77,7 @@ try_match_to_number :: proc(
 ) {
 	c := input_chars[char_index^]
 
-	if unicode.is_number(c) {
+	if unicode.is_number(c) { // TODO: handle negative numbers
 		number_literal := int(c) - 48
 
 		for j := char_index^ + 1; j < len(input_chars); j += 1 {

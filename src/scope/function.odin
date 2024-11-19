@@ -3,29 +3,21 @@ package scope
 import p "../parser"
 
 // Defines a function. Expected pattern `func $name$($name$, ...) $block$`
-InterpretedFunction :: struct {
-	using func: p.FunctionDefinition,
-	scope:      ^Scope,
-}
+InterpretedFunction :: distinct p.FunctionDefinition
 
 // Error returned by external functions in case of an error with the input values
 BuiltInFunctionError :: struct {
 	msg: string,
-	ok:        bool,
+	ok:  bool,
 }
 
-@private
+@(private)
 FunctionError :: BuiltInFunctionError
 
 // Holds a pointer to an Odin function
 BuiltInFunction :: struct {
 	name:     p.NameDefinition,
-	func_ref: #type proc(
-		args: [dynamic]p.Value,
-	) -> (
-		return_value: p.Value,
-		err: FunctionError,
-	),
+	func_ref: #type proc(args: [dynamic]p.Value) -> (return_value: p.Value, err: FunctionError),
 }
 
 Function :: union {

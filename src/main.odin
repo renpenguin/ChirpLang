@@ -33,28 +33,22 @@ main :: proc() {
 
 	tokens := tokeniser.tokenise(#load("../examples/counter.lc", string))
 
-	fmt.println("\n=== Tokenised: ===")
-	fmt.println(tokens)
-
-	fmt.println("\n=== Formatted: ===")
-	fmt.println(formatter.format(tokens))
-
 	block, parser_err := parser.parse(tokens)
 	defer parser.destroy_block(block)
 	if !parser_err.ok {
 		if found, ok := parser_err.found.?; ok {
-			fmt.eprintln("Syntax error: ", parser_err.error_msg, ", found ", found, sep = "")
+			fmt.eprintln("Syntax error: ", parser_err.msg, ", found ", found, sep = "")
 		} else {
-			fmt.eprintln("Syntax error: ", parser_err.error_msg, sep = "")
+			fmt.eprintln("Syntax error: ", parser_err.msg, sep = "")
 		}
 	}
 
-	fmt.println("=== Parsed: ===")
-	formatter.display_block(block)
-
-	fmt.println("=== Evaluating Scope ===")
 	std := scope.build_std_scope()
+	defer scope.destroy_scope(std)
+
 	block_scope, scope_err := scope.build_scope(&block, &std)
+	defer scope.destroy_scope(block_scope)
+
 	switch _ in scope_err {
 	case []parser.NameDefinition:
 		fmt.println("Scope error: invalid path:", scope_err)
@@ -62,7 +56,7 @@ main :: proc() {
 		fmt.println("Scope error: couldn't find name at path:", scope_err)
 	}
 
-	// if there is nothing aside from imports, functions and constants in the loaded block, set the main function as the primary block
+	// TODO: if there is nothing aside from imports, functions and constants in the loaded block, set the main function as the primary block
 
 	err := execute.execute_block(block, block_scope)
 	if _, ok := err.(execute.NoError); !ok {

@@ -61,8 +61,8 @@ evaluate_expression_with_scope :: proc(
 		if err != nil do return
 		err = evaluate_expression_with_scope(op.right^, scope)
 		if err != nil do return
-	case p.FormatString: // TODO: parse FormatString expressions
-
+	case p.FormatString:
+		panic("todo") // TODO: parse FormatString expressions
 	case p.NameReference:
 		err = evaluate_name_ref_with_scope(expr.(p.NameReference), .Variable, scope)
 		if err != nil do return
