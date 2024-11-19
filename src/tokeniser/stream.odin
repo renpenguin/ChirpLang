@@ -16,6 +16,8 @@ destroy_token_stream :: proc(tokens: TokenStream) {
 			if str_literal, ok := literal.(string); ok {
 				delete(string(str_literal))
 			}
+		case Comment:
+			delete(string(token.(Comment)))
 		}
 	}
 

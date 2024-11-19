@@ -9,7 +9,10 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err := SyntaxError
 
 	for i := 0; i < len(tokens); i += 1 {
 		if is_new_line(tokens[i]) do continue
-		if _, ok := tokens[i].(Comment); ok do continue
+		if comment, ok := tokens[i].(Comment); ok {
+			delete(string(comment))
+			continue
+		}
 
 		// Import statement
 		import_statement: Maybe(ImportStatement)

@@ -31,7 +31,6 @@ Token :: union #no_nil {
 }
 
 // Takes a block of code in the form of plain text as parameter and returns it as a dynamic array of tokens.
-// The returned dynamic array must be deleted with `delete(tokens)`.
 tokenise :: proc(input: string) -> (tokens: TokenStream) {
 	input_chars := utf8.string_to_runes(strings.trim_space(input))
 	defer delete(input_chars)
