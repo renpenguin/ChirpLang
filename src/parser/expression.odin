@@ -14,7 +14,7 @@ Operation :: struct {
 	op:          t.ArithmeticOperator,
 }
 
-FormatString :: distinct string
+FormatString :: distinct string // replace with array of unions..?
 
 // Block of code delimited by `()` that evaluates to one value
 Expression :: union { // TODO: make no_nil

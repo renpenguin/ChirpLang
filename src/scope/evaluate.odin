@@ -19,7 +19,7 @@ evaluate_block_with_scope :: proc(block: p.Block, scope: Scope) -> (err: ScopeEr
 		case p.VariableAssignment:
 			var_ass := instruction.(p.VariableAssignment)
 
-			err = evaluate_name_ref_with_scope(var_ass.target, scope)
+			err = evaluate_name_ref_with_scope(var_ass.target, .Variable, scope)
 			if err != nil do return
 
 			err = evaluate_expression_with_scope(var_ass.expr, scope)
@@ -47,7 +47,7 @@ evaluate_expression_with_scope :: proc(
 	case p.FunctionCall:
 		func_call := expr.(p.FunctionCall)
 
-		err = evaluate_name_ref_with_scope(func_call.name, scope)
+		err = evaluate_name_ref_with_scope(func_call.name, .Function, scope)
 		if err != nil do return
 
 		for arg in func_call.args {
@@ -62,19 +62,18 @@ evaluate_expression_with_scope :: proc(
 		err = evaluate_expression_with_scope(op.right^, scope)
 		if err != nil do return
 	case p.NameReference:
-		err = evaluate_name_ref_with_scope(expr.(p.NameReference), scope)
+		err = evaluate_name_ref_with_scope(expr.(p.NameReference), .Variable, scope)
 		if err != nil do return
 	}
 	return
 }
 
 @(private = "file")
-evaluate_name_ref_with_scope :: proc(
-	name_ref: p.NameReference,
-	scope: Scope,
-) -> (
-	err: ScopeError = nil,
-) {
+evaluate_name_ref_with_scope :: proc(name_ref: p.NameReference, type: enum {
+		Module,
+		Function,
+		Variable,
+	}, scope: Scope) -> (err: ScopeError = nil) {
 	name_ref_scope := scope
 	if path, ok := name_ref.path.?; ok {
 		name_ref_scope, err = find_scope_at_path(scope, path[:])
@@ -83,6 +82,15 @@ evaluate_name_ref_with_scope :: proc(
 
 	found_item := search_scope(&name_ref_scope, name_ref.name)
 	if found_item == nil do return ScopeError(name_ref.name)
+
+	switch type {
+	case .Module:
+		if _, ok := found_item.(Module); !ok do return ScopeError(name_ref.name)
+	case .Function:
+		if _, ok := found_item.(Function); !ok do return ScopeError(name_ref.name)
+	case .Variable:
+		if _, ok := found_item.(Variable); !ok do return ScopeError(name_ref.name)
+	}
 
 	return
 }
