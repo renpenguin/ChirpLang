@@ -19,6 +19,24 @@ std_print :: proc(
 	return
 }
 
+import "core:time"
+@(private = "file")
+std_time_sleep :: proc(
+	args: [dynamic]p.Value,
+) -> (
+	return_value: p.Value = p.None,
+	err := FunctionError{ok = true},
+) {
+	if len(args) != 1 do return p.None, FunctionError{msg = "Incorrect number of args"}
+	delay: f64
+	delay, err.ok = args[0].(t.float)
+	if !err.ok {err.msg = "passed value";return}
+
+	time.sleep(time.Duration(delay * f64(time.Second)))
+
+	return
+}
+
 import "core:math/rand"
 @(private = "file")
 std_random_range :: proc(
@@ -60,6 +78,10 @@ build_std_scope :: proc() -> (std: Scope) {
 	using p
 
 	append(&std.functions, BuiltInFunction{NameDefinition("print"), std_print})
+
+	std_time := Module{NameDefinition("time"), Scope{}}
+	append(&std_time.scope.functions, BuiltInFunction{NameDefinition("sleep"), std_time_sleep})
+	append(&std.modules, std_time)
 
 	std_random := Module{NameDefinition("random"), Scope{}}
 	append(&std_random.scope.functions, BuiltInFunction{NameDefinition("range"), std_random_range})

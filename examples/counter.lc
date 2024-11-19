@@ -1,6 +1,11 @@
-var counter = 0
+func main() {
+	var counter = 0
 
-forever {
-	counter += 1
-	print("We have now counted", counter - 1, "times")
+	forever {
+		counter += 1
+		print("We have now counted", counter - 1, "times")
+		time:sleep(0.2)
+	}
 }
+
+main()
