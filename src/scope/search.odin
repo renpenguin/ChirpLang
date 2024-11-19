@@ -1,12 +1,18 @@
 package scope
 
-import "core:fmt"
 import p "../parser"
+import "core:fmt"
 
-find_module :: proc(scope: ^Scope, query: p.NameDefinition) -> (found_scope: Scope, ok: bool) {
-	for module in scope.modules {
+ScopeItem :: union {
+	Module,
+	Function,
+	^Variable,
+}
+
+find_module :: proc(scope: ^Scope, query: p.NameDefinition) -> (found_scope: ^Scope, ok: bool) {
+	for &module in scope.modules {
 		if module.name == query {
-			return module.scope, true
+			return &module.scope, true
 		}
 	}
 
@@ -15,10 +21,10 @@ find_module :: proc(scope: ^Scope, query: p.NameDefinition) -> (found_scope: Sco
 }
 
 find_scope_at_path :: proc(
-	scope: Scope,
+	scope: ^Scope,
 	path: []p.NameDefinition,
 ) -> (
-	found_scope: Scope,
+	found_scope: ^Scope,
 	err: ScopeError = nil,
 ) {
 	if len(path) == 0 do panic("Empty non-nil path in NameDefinition")
@@ -27,7 +33,7 @@ find_scope_at_path :: proc(
 
 	path_reader: for dir in path {
 		ok: bool
-		if found_scope, ok = find_module(&found_scope, dir); ok {
+		if found_scope, ok = find_module(found_scope, dir); ok {
 			continue path_reader
 		}
 
@@ -38,13 +44,9 @@ find_scope_at_path :: proc(
 	return
 }
 
-search_scope :: proc(scope: ^Scope, query: p.NameDefinition) -> union {
-		Module,
-		Function,
-		Variable,
-	} {
-	for constant in scope.constants {
-		if constant.name == query do return constant
+search_scope :: proc(scope: ^Scope, query: p.NameDefinition) -> ScopeItem {
+	for &constant in scope.constants {
+		if constant.name == query do return &constant
 	}
 	for function in scope.functions {
 		if get_function_name(function) == query do return function
@@ -55,4 +57,23 @@ search_scope :: proc(scope: ^Scope, query: p.NameDefinition) -> union {
 
 	if scope.parent_scope == nil do return nil
 	return search_scope(scope.parent_scope, query)
+}
+
+search_for_reference :: proc(
+	scope: ^Scope,
+	query: p.NameReference,
+) -> (
+	found_item: ScopeItem,
+	err: ScopeError = nil,
+) {
+	name_ref_scope := scope
+	if path, ok := query.path.?; ok {
+		name_ref_scope, err = find_scope_at_path(scope, path[:])
+		if err != nil do return
+	}
+
+	found_item = search_scope(name_ref_scope, query.name)
+	if found_item == nil do return nil, ScopeError(query.name)
+
+	return
 }

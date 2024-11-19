@@ -19,7 +19,7 @@ BuiltInFunction :: struct {
 	func_ref: #type proc(
 		args: [dynamic]p.Value,
 	) -> (
-		return_value: Maybe(p.Value),
+		return_value: p.Value,
 		err: FunctionError,
 	),
 }

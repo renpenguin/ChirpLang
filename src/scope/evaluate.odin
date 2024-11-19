@@ -43,7 +43,7 @@ evaluate_expression_with_scope :: proc(
 ) -> (
 	err: ScopeError = nil,
 ) {
-	#partial switch _ in expr {
+	switch _ in expr {
 	case p.FunctionCall:
 		func_call := expr.(p.FunctionCall)
 
@@ -61,9 +61,14 @@ evaluate_expression_with_scope :: proc(
 		if err != nil do return
 		err = evaluate_expression_with_scope(op.right^, scope)
 		if err != nil do return
+	case p.FormatString: // TODO: parse FormatString expressions
+
 	case p.NameReference:
 		err = evaluate_name_ref_with_scope(expr.(p.NameReference), .Variable, scope)
 		if err != nil do return
+
+	case p.Value: // Do nothing
+		break
 	}
 	return
 }
@@ -74,22 +79,19 @@ evaluate_name_ref_with_scope :: proc(name_ref: p.NameReference, type: enum {
 		Function,
 		Variable,
 	}, scope: Scope) -> (err: ScopeError = nil) {
-	name_ref_scope := scope
-	if path, ok := name_ref.path.?; ok {
-		name_ref_scope, err = find_scope_at_path(scope, path[:])
-		if err != nil do return
-	}
+	scope := scope // TODO: `search_for_reference` maybe shouldnt take a reference to the scope? but it's also required for
 
-	found_item := search_scope(&name_ref_scope, name_ref.name)
-	if found_item == nil do return ScopeError(name_ref.name)
+	found_item: ScopeItem
+	found_item, err = search_for_reference(&scope, name_ref)
+	if err != nil do return ScopeError(name_ref.name)
 
-	switch type {
+	switch type { // TODO: make this able to handle passing function references
 	case .Module:
 		if _, ok := found_item.(Module); !ok do return ScopeError(name_ref.name)
 	case .Function:
 		if _, ok := found_item.(Function); !ok do return ScopeError(name_ref.name)
 	case .Variable:
-		if _, ok := found_item.(Variable); !ok do return ScopeError(name_ref.name)
+		if _, ok := found_item.(^Variable); !ok do return ScopeError(name_ref.name)
 	}
 
 	return
