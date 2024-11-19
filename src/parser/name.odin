@@ -25,7 +25,7 @@ expect_name_def :: proc(
 	if strings.contains_rune(string(keyword), ':') {
 		return NameDefinition(
 			"",
-		), SyntaxError{error_msg = "Expected name definition (no path reference `:`)", found = t.Token(t.Keyword(keyword))}
+		), SyntaxError{msg = "Expected name definition (no path reference `:`)", found = t.Token(t.Keyword(keyword))}
 	} else {
 		return NameDefinition(keyword), SyntaxError{ok = true}
 	}

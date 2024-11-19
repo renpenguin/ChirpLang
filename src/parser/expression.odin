@@ -47,7 +47,7 @@ build_expression :: proc(
 			arith_op, ok := op.(ArithmeticOperator)
 			if !ok {
 				return nil, SyntaxError {
-					error_msg = "Invalid expression: expected arithmetic operator",
+					msg = "Invalid expression: expected arithmetic operator",
 					found = Token(op),
 				}
 			}
@@ -58,13 +58,13 @@ build_expression :: proc(
 				state = .StoredPartAndOperator
 			case .StoredPartAndOperator:
 				return nil, SyntaxError {
-					error_msg = "Invalid expression: operator follows other operator",
+					msg = "Invalid expression: operator follows other operator",
 				}
 			// Combine expressions into operation
 			case .None:
 				// TODO: handle Neg and Not here
 				return nil, SyntaxError {
-					error_msg = "Invalid expression: operator does not follow expression ",
+					msg = "Invalid expression: operator does not follow expression ",
 				}
 			}
 
@@ -75,18 +75,18 @@ build_expression :: proc(
 			to_store = literal_to_value(literal)
 		} else if tokens[i] == Token(Keyword(.FString)) { 	// f-string
 			FSTRING_ERROR_MSG :: "Invalid expression: Expected string literal after `f` keyword"
-			if i + 1 >= len(tokens) do return nil, SyntaxError{error_msg = FSTRING_ERROR_MSG}
+			if i + 1 >= len(tokens) do return nil, SyntaxError{msg = FSTRING_ERROR_MSG}
 
 			literal, lit_ok := tokens[i + 1].(Literal)
-			if !lit_ok do return nil, SyntaxError{error_msg = FSTRING_ERROR_MSG, found = Token(literal)}
+			if !lit_ok do return nil, SyntaxError{msg = FSTRING_ERROR_MSG, found = Token(literal)}
 			str, str_ok := literal.(string)
-			if !str_ok do return nil, SyntaxError{error_msg = FSTRING_ERROR_MSG, found = Token(literal)}
+			if !str_ok do return nil, SyntaxError{msg = FSTRING_ERROR_MSG, found = Token(literal)}
 
 			i += 1
 			to_store = FormatString(str)
 		} else if keyword, ok := tokens[i].(Keyword); ok { 	// Custom keyword
 			custom_keyword, ok := keyword.(CustomKeyword)
-			if !ok do return nil, SyntaxError{error_msg = "Invalid expression: Expected custom keyword", found = Token(keyword)}
+			if !ok do return nil, SyntaxError{msg = "Invalid expression: Expected custom keyword", found = Token(keyword)}
 
 			if i + 1 < len(tokens) && tokens[i + 1] == Token(Bracket{.Round, .Opening}) {
 				i += 1
@@ -111,17 +111,17 @@ build_expression :: proc(
 			was_comma: bool
 			to_store, err, was_comma = capture_arg_until_closing_bracket(tokens, &i)
 			if !err.ok do return
-			if to_store == nil do return nil, SyntaxError{error_msg = "Invalid expression: found empty expression `()`"}
-			if was_comma do return nil, SyntaxError{error_msg = "Invalid expression: comma found separating values in expression"}
+			if to_store == nil do return nil, SyntaxError{msg = "Invalid expression: found empty expression `()`"}
+			if was_comma do return nil, SyntaxError{msg = "Invalid expression: comma found separating values in expression"}
 		}
 
 		s, ok := to_store.?
-		if !ok do return nil, SyntaxError{error_msg = "Invalid expression", found = Token(tokens[i])}
+		if !ok do return nil, SyntaxError{msg = "Invalid expression", found = Token(tokens[i])}
 		if ok {
 			switch state {
 			case .StoredPart:
 				return nil, SyntaxError {
-					error_msg = "Invalid expression: literal follows other expression",
+					msg = "Invalid expression: literal follows other expression",
 				}
 			case .StoredPartAndOperator:
 				// Combine expressions into one operation
@@ -143,9 +143,9 @@ build_expression :: proc(
 
 	#partial switch state {
 	case .StoredPartAndOperator:
-		return nil, SyntaxError{error_msg = "Invalid expression: found trailing operator"}
+		return nil, SyntaxError{msg = "Invalid expression: found trailing operator"}
 	case .None:
-		return nil, SyntaxError{error_msg = "Empty expression"}
+		return nil, SyntaxError{msg = "Empty expression"}
 	}
 
 	return
