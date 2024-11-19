@@ -2,6 +2,7 @@ package main
 
 import "core:fmt"
 import "core:mem"
+import "execute"
 import "formatter"
 import "parser"
 import "scope"
@@ -30,7 +31,7 @@ main :: proc() {
 		}
 	}
 
-	tokens := tokeniser.tokenise(#load("../examples/forever.lc", string))
+	tokens := tokeniser.tokenise(#load("../examples/counter.lc", string))
 
 	fmt.println("\n=== Tokenised: ===")
 	fmt.println(tokens)
@@ -60,9 +61,10 @@ main :: proc() {
 	case parser.NameDefinition:
 		fmt.println("Scope error: couldn't find name at path:", scope_err)
 	}
-	formatter.display_block(block, ignore_scope_statements = true)
 
 	// if there is nothing aside from imports, functions and constants in the loaded block, set the main function as the primary block
 
 	// run the block!!
+	fmt.println("=== Running ===")
+	execute.execute_block(block, block_scope)
 }

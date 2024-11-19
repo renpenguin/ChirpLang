@@ -1,0 +1,6 @@
+var counter = 0
+
+forever {
+	counter += 1
+	print("We have now counted", counter - 1, "times")
+}

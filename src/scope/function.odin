@@ -9,10 +9,14 @@ InterpretedFunction :: struct {
 }
 
 // Error returned by external functions in case of an error with the input values
-FunctionError :: struct {
+BuiltInFunctionError :: struct {
 	msg: string,
 	ok:        bool,
 }
+
+@private
+FunctionError :: BuiltInFunctionError
+
 // Holds a pointer to an Odin function
 BuiltInFunction :: struct {
 	name:     p.NameDefinition,

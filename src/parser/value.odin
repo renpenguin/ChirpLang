@@ -3,7 +3,7 @@ package parser
 import t "../tokeniser"
 
 NoneType :: struct {}
-None :: NoneType {}
+None :: NoneType{}
 
 ValueType :: enum {
 	Int,
@@ -24,16 +24,33 @@ Value :: union #no_nil {
 
 literal_to_value :: proc(literal: t.Literal) -> Value {
 	switch _ in literal {
-		case int:
-			return Value(literal.(int))
-		case t.float:
-			return Value(literal.(t.float))
-		case string:
-			return Value(literal.(string))
-		case bool:
-			return Value(literal.(bool))
-		case:
-			panic("Unreachable")
+	case int:
+		return Value(literal.(int))
+	case t.float:
+		return Value(literal.(t.float))
+	case string:
+		return Value(literal.(string))
+	case bool:
+		return Value(literal.(bool))
+	case:
+		panic("Unreachable")
+	}
+}
+
+get_value_type :: proc(value: Value) -> ValueType {
+	switch _ in value {
+	case int:
+		return .Int
+	case t.float:
+		return .Float
+	case string:
+		return .String
+	case bool:
+		return .Bool
+	case NoneType:
+		return .None
+	case:
+		panic("Unreachable")
 	}
 }
 
