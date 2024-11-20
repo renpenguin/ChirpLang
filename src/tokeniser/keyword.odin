@@ -7,15 +7,15 @@ BuiltInKeyword :: enum {
 	Import,
 	Func,
 	Var,
-	If,
-	Else,
-	For,
-	While,
+	If, // NYI
+	Else, // NYI
+	For, // NYI
+	While, // NYI
 	Forever,
-	Break,
-	Continue,
-	Return,
-	FString,
+	Break, // NYI
+	Continue, // NYI
+	Return, // NYI
+	FString, // NYI
 }
 
 TypeKeyword :: enum {
