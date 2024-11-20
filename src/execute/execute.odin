@@ -41,6 +41,7 @@ execute_block :: proc(block: p.Block, scope: s.Scope) -> (err: RuntimeError) {
 	return NoErrorUnit
 }
 
+@(private)
 execute_expression :: proc(
 	expr: p.Expression,
 	scope: ^s.Scope,

@@ -31,7 +31,7 @@ main :: proc() {
 		}
 	}
 
-	tokens := tokeniser.tokenise(#load("../examples/counter.lc", string))
+	tokens := tokeniser.tokenise(#load("../examples/function.lc", string))
 
 	block, parser_err := parser.parse(tokens)
 	defer parser.destroy_block(block)
@@ -59,7 +59,15 @@ main :: proc() {
 	// TODO: if there is nothing aside from imports, functions and constants in the loaded block, set the main function as the primary block
 
 	err := execute.execute_block(block, block_scope)
-	if _, ok := err.(execute.NoError); !ok {
-		fmt.println("Runtime error:", err)
+	if !execute.is_runtime_error_ok(err) {
+		fmt.print("Runtime error: ")
+		switch _ in err {
+		case execute.TypeError:
+			fmt.println("Type error", err.(execute.TypeError))
+		case scope.BuiltInFunctionError:
+			fmt.println("C function error", err.(scope.BuiltInFunctionError))
+		case execute.NoError:
+			panic("Unreachable")
+		}
 	}
 }
