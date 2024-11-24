@@ -16,6 +16,11 @@ is_new_line :: proc(token: Token) -> bool {
 
 @(private)
 append_new_line :: proc(tokens: ^TokenStream) {
+	if len(tokens) == 0 {
+		append(tokens, NewLine)
+		return
+	}
+	
 	previous_token, was_new_line := tokens[len(tokens) - 1].(NewLineType)
 	if !was_new_line {
 		append(tokens, NewLine)

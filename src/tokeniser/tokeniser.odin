@@ -65,6 +65,7 @@ tokenise_next_char :: proc(
 	// Comments
 	if comment, ok := try_match_to_comment(input_chars, char_index); ok {
 		if keep_comments do append(tokens, comment)
+		else do delete(string(comment))
 		return
 	}
 
