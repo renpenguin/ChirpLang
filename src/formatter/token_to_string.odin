@@ -33,6 +33,7 @@ operator_to_string :: proc(op: t.Operator) -> string {
 @(private)
 builtin_keyword_to_string :: proc(keyword: t.BuiltInKeyword) -> string {
 	if keyword == .FString do return strings.clone("f")
+	if keyword == .ReturnType do return strings.clone(" ->")
 
 	formatted := fmt.aprint(keyword)
 	defer delete(formatted)

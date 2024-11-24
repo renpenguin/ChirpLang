@@ -34,8 +34,8 @@ evaluate_block_with_scope :: proc(block: p.Block, scope: Scope) -> (err: ScopeEr
 		case Expression:
 			err = evaluate_expression_with_scope(instruction.(Expression), scope)
 			if err != nil do return
-		case p.Expression:
-			err = evaluate_expression_with_scope(instruction.(p.Expression), scope)
+		case Return:
+			err = evaluate_expression_with_scope(Expression(instruction.(Return)), scope)
 			if err != nil do return
 		}
 	}

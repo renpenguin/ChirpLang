@@ -52,7 +52,8 @@ process_operation :: proc(
 	value1, value2, ok := match_types(value1, value2)
 	if !ok do return p.None, TypeError{
 		msg = "Could not match value types",
-		values=[dynamic]p.ValueType{ p.get_value_type(value1), p.get_value_type(value2) }
+		value1 = p.get_value_type(value1),
+		value2 = p.get_value_type(value2)
 	}
 
 	switch p.get_value_type(value1) {

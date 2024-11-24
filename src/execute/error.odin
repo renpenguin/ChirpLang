@@ -5,10 +5,10 @@ import s "../scope"
 import t "../tokeniser"
 
 TypeError :: struct {
-	msg:    string,
-	values: Maybe([dynamic]p.ValueType),
-	op:     Maybe(t.ArithmeticOperator),
-	ok:     bool,
+	msg:            string,
+	value1, value2: Maybe(p.ValueType),
+	op:             Maybe(t.ArithmeticOperator),
+	ok:             bool,
 }
 
 NoError :: struct {}

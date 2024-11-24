@@ -14,7 +14,8 @@ BuiltInKeyword :: enum {
 	Forever,
 	Break, // NYI
 	Continue, // NYI
-	Return, // NYI
+	ReturnType, // ->
+	Return,
 	FString, // NYI
 }
 

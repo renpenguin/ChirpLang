@@ -62,6 +62,18 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err := SyntaxError
 			continue
 		}
 
+		// Return
+		if tokens[i] == Token(Keyword(.Return)) {
+			return_expr: Expression
+
+			i += 1
+			return_expr, err = capture_expression(tokens, &i)
+			if !err.ok do return
+
+			append(&instructions, Return(return_expr))
+			continue
+		}
+
 		// Expression (catch-all for anything we may have missed)
 		expr: Expression
 		expr, err = capture_expression(tokens, &i)

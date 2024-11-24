@@ -26,7 +26,7 @@ FunctionArgument :: struct {
 FunctionDefinition :: struct {
 	name:        NameDefinition,
 	args:        [dynamic]FunctionArgument,
-	return_type: Maybe(ValueType),
+	return_type: ValueType,
 	block:       Block,
 }
 
@@ -35,6 +35,8 @@ Forever :: struct {
 	block: Block,
 }
 
+Return :: distinct Expression
+
 Statement :: union {
 	ImportStatement,
 	VariableDefinition,
@@ -42,6 +44,7 @@ Statement :: union {
 	FunctionDefinition,
 	Forever,
 	Expression,
+	Return,
 }
 
 // Captures a block of statements surrounded by {}. `token_index` should be the index of the first {
@@ -167,6 +170,20 @@ try_match_func_definition :: proc(
 			Comma,
 			"Expected ) or comma after function argument",
 		)
+	}
+
+	if expect_token(tokens[char_index^ + 1], t.Token(t.Keyword(.ReturnType)), "").ok {
+		char_index^ += 2
+
+		EXPECTED_TYPE_KEYWORD_ERROR :: "Expected type keyword after -> in function definition"
+		kw, kw_ok := tokens[char_index^].(t.Keyword)
+		if !kw_ok do return nil, SyntaxError{msg = EXPECTED_TYPE_KEYWORD_ERROR, found = tokens[char_index^]}
+		tkw, tkw_ok := kw.(t.TypeKeyword)
+		if !tkw_ok do return nil, SyntaxError{msg = EXPECTED_TYPE_KEYWORD_ERROR, found = kw}
+
+		func_def.return_type = tkw
+	} else {
+		func_def.return_type = .None
 	}
 
 	char_index^ += 1

@@ -69,6 +69,13 @@ tokenise_next_char :: proc(tokens: ^TokenStream, input_chars: []rune, char_index
 		return
 	}
 
+	// -> symbol
+	if c == '-' && input_chars[char_index^ + 1] == '>' {
+		char_index^ += 1
+		append(tokens, Keyword(.ReturnType))
+		return
+	}
+
 	// Operators
 	if op, ok := try_match_to_assignable_operator(input_chars, char_index); ok {
 		append(tokens, op)

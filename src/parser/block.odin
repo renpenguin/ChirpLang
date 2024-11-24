@@ -38,6 +38,9 @@ destroy_block :: proc(block: Block) {
 
 		case Expression:
 			destroy_expression(instruction.(Expression))
+
+		case Return:
+			destroy_expression(Expression(instruction.(Return)))
 		}
 
 	}

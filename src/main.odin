@@ -58,16 +58,19 @@ main :: proc() {
 
 	// TODO: if there is nothing aside from imports, functions and constants in the loaded block, set the main function as the primary block
 
-	err := execute.execute_block(block, block_scope)
+	return_val, err := execute.execute_block(block, block_scope)
 	if !execute.is_runtime_error_ok(err) {
-		fmt.print("Runtime error: ")
+		fmt.eprint("Runtime error: ")
 		switch _ in err {
 		case execute.TypeError:
-			fmt.println("Type error", err.(execute.TypeError))
+			fmt.eprintln("Type error", err.(execute.TypeError))
 		case scope.BuiltInFunctionError:
-			fmt.println("C function error", err.(scope.BuiltInFunctionError))
+			fmt.eprintln("C function error", err.(scope.BuiltInFunctionError))
 		case execute.NoError:
 			panic("Unreachable")
 		}
+	}
+	if _, ok := return_val.(parser.NoneType); !ok {
+		fmt.eprintln("Runtime error: return statement should only be used in a function, found", return_val) // TODO: do this in `scope.evaluate`
 	}
 }
