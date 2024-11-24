@@ -1,5 +1,4 @@
-import math, random
-
+// example of a function definition
 func add(first int, second int) -> int {
 	print("adding", first, "and", second)
 	return first + second

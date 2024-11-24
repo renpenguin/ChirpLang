@@ -2,30 +2,19 @@ package scope
 
 import p "../parser"
 import t "../tokeniser"
+import d "./definitions"
+import l "./libraries"
 import "core:fmt"
 
-Module :: struct {
-	name:  p.NameDefinition,
-	scope: Scope,
-}
-
-Variable :: struct {
-	name:     p.NameDefinition,
-	// Variable can be of type int, float, string or bool
-	contents: p.Value,
-}
-
-Scope :: struct {
-	parent_scope: ^Scope,
-	modules:      [dynamic]Module,
-	functions:    [dynamic]Function,
-	constants:    [dynamic]Variable,
-}
+Module :: d.Module
+Variable :: d.Variable
+Scope :: d.Scope
 
 ScopeError :: struct {
 	err_source: union #no_nil {
 		[]p.NameDefinition,
 		p.NameDefinition,
+		Module,
 	},
 	ok:         bool,
 }
@@ -42,7 +31,16 @@ build_scope :: proc(
 
 	for instruction, i in block {
 		if import_statement, ok := instruction.(p.ImportStatement); ok {
-			// These do nothing for now
+			for name_ref in import_statement {
+				module, ok := l.try_access_library(name_ref)
+				if !ok do return scope, ScopeError{err_source = name_ref.name}
+
+				if _, mod_already_exists := find_module(&scope, module.name); mod_already_exists {
+					return scope, ScopeError{err_source = module}
+				}
+
+				append(&scope.modules, module)
+			}
 		}
 
 		if func_declaration, ok := instruction.(p.FunctionDefinition); ok {

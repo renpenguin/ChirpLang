@@ -1,4 +1,4 @@
-import math, random
+import math, random, time
 
 //If there is no scope body, this function will be called automatically
 func main() {
@@ -13,6 +13,8 @@ func main() {
 
 		var sin_num = math:sin(num)
 		print(f"sin({ num }) = { sin_num }")
+
+		time:sleep(0.1)
 	}
 }
 

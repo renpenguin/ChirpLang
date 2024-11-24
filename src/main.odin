@@ -7,6 +7,7 @@ import "execute"
 import "formatter"
 import "parser"
 import "scope"
+import "scope/libraries"
 import "tokeniser"
 
 main :: proc() {
@@ -45,7 +46,7 @@ main :: proc() {
 		os.exit(1)
 	}
 
-	std := scope.build_std_scope()
+	std := libraries.build_std_scope()
 	defer scope.destroy_scope(std)
 
 	block_scope, scope_err := scope.build_scope(&block, &std)
@@ -57,6 +58,8 @@ main :: proc() {
 			fmt.eprintln("Scope error: invalid path:", scope_err)
 		case parser.NameDefinition:
 			fmt.eprintln("Scope error: couldn't find name at path:", scope_err)
+		case scope.Module:
+			fmt.eprintln("Scope error: imported module already exists:", scope_err)
 		}
 		os.exit(1)
 	}

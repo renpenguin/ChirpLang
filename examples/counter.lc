@@ -1,3 +1,5 @@
+import time
+
 var counter = 0
 
 print("Counting from", counter)
