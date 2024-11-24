@@ -165,6 +165,7 @@ capture_expression :: proc(
 
 	for token_index^ < len(tokens) {
 		if t.is_new_line(tokens[token_index^]) do break
+		if _, is_comment := tokens[token_index^].(t.Comment); is_comment do break
 
 		append(&captured_tokens, tokens[token_index^])
 		token_index^ += 1
