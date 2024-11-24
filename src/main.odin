@@ -10,30 +10,8 @@ import "scope"
 import "scope/libraries"
 import "tokeniser"
 
-main :: proc() {
-	when ODIN_DEBUG { 	// Memory Allocation Tracker
-		track: mem.Tracking_Allocator
-		mem.tracking_allocator_init(&track, context.allocator)
-		context.allocator = mem.tracking_allocator(&track)
-
-		defer {
-			if len(track.allocation_map) > 0 {
-				fmt.eprintf("=== %v allocations not freed: ===\n", len(track.allocation_map))
-				for _, entry in track.allocation_map {
-					fmt.eprintf("- %v bytes @ %v\n", entry.size, entry.location)
-				}
-			}
-			if len(track.bad_free_array) > 0 {
-				fmt.eprintf("=== %v incorrect frees: ===\n", len(track.bad_free_array))
-				for entry in track.bad_free_array {
-					fmt.eprintf("- %p @ %v\n", entry.memory, entry.location)
-				}
-			}
-			mem.tracking_allocator_destroy(&track)
-		}
-	}
-
-	tokens := tokeniser.tokenise(#load("../examples/function.lc", string))
+run :: proc(input: string) {
+	tokens := tokeniser.tokenise(input)
 
 	block, parser_err := parser.parse(tokens)
 	defer parser.destroy_block(block)
@@ -85,5 +63,67 @@ main :: proc() {
 			return_val,
 		) // TODO: do this (and same for forever) in `scope.evaluate`
 		os.exit(1)
+	}
+}
+
+format :: proc(input: string, to_path: string) {
+	tokens := tokeniser.tokenise(input, true)
+	defer tokeniser.destroy_token_stream(tokens)
+
+	formatted := formatter.format(tokens)
+
+	err := os.write_entire_file_or_err(to_path, transmute([]u8)formatted)
+	if err != nil {
+		fmt.eprintln("Error writing to file:", err)
+		os.exit(1)
+	}
+}
+
+main :: proc() {
+	when ODIN_DEBUG { 	// Memory Allocation Tracker
+		track: mem.Tracking_Allocator
+		mem.tracking_allocator_init(&track, context.allocator)
+		context.allocator = mem.tracking_allocator(&track)
+
+		defer {
+			if len(track.allocation_map) > 0 {
+				fmt.eprintf("=== %v allocations not freed: ===\n", len(track.allocation_map))
+				for _, entry in track.allocation_map {
+					fmt.eprintf("- %v bytes @ %v\n", entry.size, entry.location)
+				}
+			}
+			if len(track.bad_free_array) > 0 {
+				fmt.eprintf("=== %v incorrect frees: ===\n", len(track.bad_free_array))
+				for entry in track.bad_free_array {
+					fmt.eprintf("- %p @ %v\n", entry.memory, entry.location)
+				}
+			}
+			mem.tracking_allocator_destroy(&track)
+		}
+	}
+
+	if len(os.args) != 3 {
+		fmt.eprintln("Argument error: Please use either `chirp run <file>` or `chirp format <file>`")
+		os.exit(1)
+	}
+
+	if !os.exists(os.args[2]) {
+		fmt.eprintln("Argument error: argument 2 is not a valid path")
+		os.exit(1)
+	}
+
+	input, err := os.read_entire_file_from_filename_or_err(os.args[2])
+	if err != nil {
+		fmt.eprintln("File read error:", err)
+	}
+	defer delete(input)
+
+	switch os.args[1] {
+		case "run":
+			run(string(input))
+		case "format":
+			format(string(input), os.args[2])
+		case:
+			fmt.eprintln("Argument error: argument 1 was not `run` or `format`")
 	}
 }

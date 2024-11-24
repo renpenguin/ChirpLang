@@ -11,7 +11,7 @@ format :: proc(tokens: t.TokenStream) -> string {
 	using t
 	sb := strings.builder_make()
 
-	previous_token: Token
+	previous_token := Token(NewLine)
 	indent := 0
 	for token in tokens {
 		// If the previous token was a `{` and the current one isn't a new line, print one in:
