@@ -37,6 +37,7 @@ try_match_to_literal :: proc(
 
 	// String literals
 	if c == '"' || c == '\'' {
+		opening_character := c
 		string_runes: [dynamic]rune
 		defer delete(string_runes)
 
@@ -45,7 +46,7 @@ try_match_to_literal :: proc(
 			char_index^ += 1
 
 			switch c {
-			case '"', '\'':
+			case opening_character:
 				break collect_runes
 			case '\\':
 				char_index^ += 1
