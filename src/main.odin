@@ -2,6 +2,7 @@ package main
 
 import "core:fmt"
 import "core:mem"
+import "core:os"
 import "execute"
 import "formatter"
 import "parser"
@@ -41,6 +42,7 @@ main :: proc() {
 		} else {
 			fmt.eprintln("Syntax error: ", parser_err.msg, sep = "")
 		}
+		os.exit(1)
 	}
 
 	std := scope.build_std_scope()
@@ -49,11 +51,14 @@ main :: proc() {
 	block_scope, scope_err := scope.build_scope(&block, &std)
 	defer scope.destroy_scope(block_scope)
 
-	switch _ in scope_err {
-	case []parser.NameDefinition:
-		fmt.println("Scope error: invalid path:", scope_err)
-	case parser.NameDefinition:
-		fmt.println("Scope error: couldn't find name at path:", scope_err)
+	if !scope_err.ok {
+		switch _ in scope_err.err_source {
+		case []parser.NameDefinition:
+			fmt.eprintln("Scope error: invalid path:", scope_err)
+		case parser.NameDefinition:
+			fmt.eprintln("Scope error: couldn't find name at path:", scope_err)
+		}
+		os.exit(1)
 	}
 
 	// TODO: if there is nothing aside from imports, functions and constants in the loaded block, set the main function as the primary block
@@ -69,8 +74,13 @@ main :: proc() {
 		case execute.NoError:
 			panic("Unreachable")
 		}
+		os.exit(1)
 	}
 	if _, ok := return_val.(parser.NoneType); !ok {
-		fmt.eprintln("Runtime error: return statement should only be used in a function, found", return_val) // TODO: do this in `scope.evaluate`
+		fmt.eprintln(
+			"Runtime error: return statement should only be used in a function, found",
+			return_val,
+		) // TODO: do this (and same for forever) in `scope.evaluate`
+		os.exit(1)
 	}
 }

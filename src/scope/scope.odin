@@ -22,9 +22,12 @@ Scope :: struct {
 	constants:    [dynamic]Variable,
 }
 
-ScopeError :: union {
-	[]p.NameDefinition,
-	p.NameDefinition,
+ScopeError :: struct {
+	err_source: union #no_nil {
+		[]p.NameDefinition,
+		p.NameDefinition,
+	},
+	ok:         bool,
 }
 
 // Builds a `Scope` value for the block and any nested functions or libraries. This will remove all `FunctionDefinition`s and `ImportStatement`s from the block
@@ -33,7 +36,7 @@ build_scope :: proc(
 	parent_module: ^Scope,
 ) -> (
 	scope: Scope,
-	err: ScopeError = nil,
+	err := ScopeError{ok = true},
 ) {
 	scope.parent_scope = parent_module
 
@@ -47,12 +50,12 @@ build_scope :: proc(
 				parent_scope = &scope,
 			}
 			defer destroy_scope(function_scope)
-			
+
 			for arg in func_declaration.args {
 				append(&function_scope.constants, Variable{arg.name, p.None})
 			}
 			err = evaluate_block_with_scope(func_declaration.block, function_scope)
-			if err != nil do return
+			if !err.ok do return
 
 			append(&scope.functions, InterpretedFunction(func_declaration))
 		}

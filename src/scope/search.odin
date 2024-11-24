@@ -25,7 +25,7 @@ find_scope_at_path :: proc(
 	path: []p.NameDefinition,
 ) -> (
 	found_scope: ^Scope,
-	err: ScopeError = nil,
+	err := ScopeError{ok = true},
 ) {
 	if len(path) == 0 do panic("Empty non-nil path in NameDefinition")
 
@@ -37,7 +37,7 @@ find_scope_at_path :: proc(
 			continue path_reader
 		}
 
-		err = ScopeError(path)
+		err = ScopeError{err_source = path}
 		return
 	}
 
@@ -64,16 +64,16 @@ search_for_reference :: proc(
 	query: p.NameReference,
 ) -> (
 	found_item: ScopeItem,
-	err: ScopeError = nil,
+	err := ScopeError{ok = true},
 ) {
 	name_ref_scope := scope
 	if path, ok := query.path.?; ok {
 		name_ref_scope, err = find_scope_at_path(scope, path[:])
-		if err != nil do return
+		if !err.ok do return
 	}
 
 	found_item = search_scope(name_ref_scope, query.name)
-	if found_item == nil do return nil, ScopeError(query.name)
+	if found_item == nil do err = ScopeError{err_source = query.name}
 
 	return
 }

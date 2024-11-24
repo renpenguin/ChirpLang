@@ -35,9 +35,8 @@ execute_block :: proc(
 					parent_scope = &scope,
 				}
 				defer s.destroy_scope(forever_scope)
-				return_val, err = execute_block(forever_block, forever_scope)
+				_, err = execute_block(forever_block, forever_scope)
 				if !is_runtime_error_ok(err) do return p.None, err
-				return return_val, err
 			}
 		case Expression:
 			_, err = execute_expression(instruction.(Expression), &scope)
