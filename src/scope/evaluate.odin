@@ -5,27 +5,34 @@ import "core:fmt"
 
 // Make sure all involved blocks' instructions are only accessing values they have access to
 evaluate_block_with_scope :: proc(block: p.Block, scope: Scope) -> (err: ScopeError = nil) {
+	using p
+
 	scope := scope
 	for instruction in block {
 		switch _ in instruction {
-		case p.ImportStatement, p.FunctionDefinition: // Ignore this
-		case p.VariableDefinition:
+		case ImportStatement, FunctionDefinition:
+			// Ignore this
+			break
+		case VariableDefinition:
 			var_def := instruction.(p.VariableDefinition)
 
 			err = evaluate_expression_with_scope(var_def.expr, scope)
 			if err != nil do return
 
 			append(&scope.constants, Variable{var_def.name, p.None})
-		case p.VariableAssignment:
-			var_ass := instruction.(p.VariableAssignment)
+		case VariableAssignment:
+			var_ass := instruction.(VariableAssignment)
 
 			err = evaluate_name_ref_with_scope(var_ass.target, .Variable, scope)
 			if err != nil do return
 
 			err = evaluate_expression_with_scope(var_ass.expr, scope)
 			if err != nil do return
-		case p.Forever:
-			err = evaluate_block_with_scope(instruction.(p.Forever).block, scope)
+		case Forever:
+			err = evaluate_block_with_scope(instruction.(Forever).block, scope)
+			if err != nil do return
+		case Expression:
+			err = evaluate_expression_with_scope(instruction.(Expression), scope)
 			if err != nil do return
 		case p.Expression:
 			err = evaluate_expression_with_scope(instruction.(p.Expression), scope)
@@ -67,8 +74,8 @@ evaluate_expression_with_scope :: proc(
 		err = evaluate_name_ref_with_scope(expr.(p.NameReference), .Variable, scope)
 		if err != nil do return
 
-	case p.Value: // Do nothing
-		break
+	case p.Value:
+		break // Do nothing
 	}
 	return
 }
@@ -85,7 +92,7 @@ evaluate_name_ref_with_scope :: proc(name_ref: p.NameReference, type: enum {
 	found_item, err = search_for_reference(&scope, name_ref)
 	if err != nil do return ScopeError(name_ref.name)
 
-	switch type { // TODO: make this able to handle passing function references
+	switch type { 	// TODO: make this able to handle passing function references
 	case .Module:
 		if _, ok := found_item.(Module); !ok do return ScopeError(name_ref.name)
 	case .Function:

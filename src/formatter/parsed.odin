@@ -1,12 +1,12 @@
 package formatter
 
-import "../parser"
+import p "../parser"
 import "core:fmt"
 import "core:strings"
 
-// Prints a `parser.Block` to `stdout` in a pseudo language
-display_block :: proc(block: parser.Block, indent := 0, ignore_scope_statements := false) {
-	using parser
+// Prints a `p.Block` to `stdout` in a pseudo language
+display_block :: proc(block: p.Block, indent := 0, ignore_scope_statements := false) {
+	using p
 
 	for instruction in block {
 		for i := 0; i < indent; i += 1 {
@@ -48,9 +48,10 @@ display_block :: proc(block: parser.Block, indent := 0, ignore_scope_statements 
 	}
 }
 
-// Prints a `parser.Expresion` to `stdout` in a human-readable pseudo language
-display_expression :: proc(expr: parser.Expression) {
-	using parser
+// Prints a `p.Expresion` to `stdout` in a human-readable pseudo language
+@(private)
+display_expression :: proc(expr: p.Expression) {
+	using p
 
 	#partial switch _ in expr {
 	case Operation:
@@ -79,7 +80,7 @@ display_expression :: proc(expr: parser.Expression) {
 		fmt.print("Format{ \"", expr.(FormatString), "\" }", sep = "")
 
 	case NameReference:
-		fmt.print(name_ref_to_string(expr.(parser.NameReference)))
+		fmt.print(name_ref_to_string(expr.(p.NameReference)))
 
 	case:
 		fmt.print(expr)
@@ -87,7 +88,8 @@ display_expression :: proc(expr: parser.Expression) {
 }
 
 @(deferred_out = delete_string)
-name_ref_to_string :: proc(name_ref: parser.NameReference) -> string {
+@(private)
+name_ref_to_string :: proc(name_ref: p.NameReference) -> string {
 	sb := strings.builder_make()
 	// defer strings.builder_destroy(&sb)
 	if path, ok := name_ref.path.?; ok {
@@ -100,4 +102,6 @@ name_ref_to_string :: proc(name_ref: parser.NameReference) -> string {
 
 	return strings.to_string(sb)
 }
+
+@(private)
 delete_string :: proc(str: string) {delete(str)}

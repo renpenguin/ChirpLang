@@ -13,8 +13,9 @@ execute_block :: proc(block: p.Block, scope: s.Scope) -> (err: RuntimeError) {
 		case VariableDefinition:
 			var_def := instruction.(p.VariableDefinition)
 
-			contents, err := execute_expression(var_def.expr, &scope)
-			if !is_runtime_error_ok(err) do return err
+			contents: p.Value
+			contents, err = execute_expression(var_def.expr, &scope)
+			if !is_runtime_error_ok(err) do return
 
 			append(&scope.constants, s.Variable{name = var_def.name, contents = contents})
 		case VariableAssignment:

@@ -4,6 +4,7 @@ import t "../tokeniser"
 import "core:fmt"
 import "core:strings"
 
+@(private)
 operator_to_string :: proc(op: t.Operator) -> string {
 	switch op {
 	case .Add: return "+"
@@ -29,6 +30,7 @@ operator_to_string :: proc(op: t.Operator) -> string {
 	panic("Unreachable")
 }
 
+@(private)
 builtin_keyword_to_string :: proc(keyword: t.BuiltInKeyword) -> string {
 	if keyword == .FString do return strings.clone("f")
 
@@ -37,12 +39,14 @@ builtin_keyword_to_string :: proc(keyword: t.BuiltInKeyword) -> string {
 	return strings.to_lower(formatted)
 }
 
+@(private)
 type_keyword_to_string :: proc(keyword: t.TypeKeyword) -> string {
 	formatted := fmt.aprint(keyword)
 	defer delete(formatted)
 	return strings.to_lower(formatted)
 }
 
+@(private)
 bracket_to_rune :: proc(bracket: t.Bracket) -> rune {
 	switch bracket {
 	case t.Bracket{.Round, .Opening}: return '('

@@ -15,6 +15,12 @@
 	- Software and hardware requirements 
 - Develop measurable success criteria for the solution
 
+Programming has never been more accessible thanks to the extensive development of easy-to-learn languages made for beginners. However, many of the languages designed to be "easy to learn" end up being not very easy to use. For example, Python and Lua (both dynamically typed, interpreted languages) are praised for being "great for beginners!", but their dynamic typing means that it's easy to get an erroneous type in a variable without throwing any sort of error (unless the user handles it). This "Manual Error Handling" requires users to themselves constantly check if their variables are of the right type, lest a variable gets an incorrect type and the code fails in a way that makes it *very* difficult to debug.
+
+A lot of modern languages are statically typed, which means that variables have a fixed type and can't be changed to any other type without being re-declared. This way a variable is always guaranteed to have the same type that it started with. Python and Lua avoid static typing for the sake of short-term simplicity at the cost of complete and utter confusion should anything go wrong. In 2024, people learning to program deserve basic quality of life features like this, and shouldn't be treated like they won't understand what a type is.
+
+
+
 problem: lua is the absolute worst language ever conceived
 stakeholders: people learning to code or looking to integrate a scripting language into their project
 
@@ -54,11 +60,13 @@ func main() {
 }
 ```
 
-Lua uses a garbage collector for memory management. A garbage collector is typically a process run by a language interpreter or runtime that automatically finds memory that is no longer used and deallocates it. While this means that a user of the language never has to deal with memory, such an automated system is a very dangerous game to play as certain edge cases can result in memory leaks which a user of the language will have no way of fixing, OR memory that is *still* in use being deleted and causing memory failures. The pains of garbage collection plague nearly every scripting language on earth, so for Chirp I want to choose a more robust option:
+Lua uses a garbage collector for memory management. A garbage collector is typically a process run by a language interpreter or runtime that automatically finds memory that is no longer used and de-allocates it. While this means that a user of the language never has to deal with memory, such an automated system is a very dangerous game to play as certain edge cases can result in memory leaks which a user of the language will have no way of fixing, OR memory that is *still* in use being deleted and causing memory failures. The pains of garbage collection plague nearly every scripting language on earth, so for Chirp I want to choose a more robust option:
 - manual memory management (we want this language to be beginner friendly!)
 - automated memory management based on call stack (and cases where this will not work)
 - reference counting (the simplest form of automated memory management)
 	- ownership and lifetimes (the holy grail of memory safety, but too much of a pain for a scripting language)
+
+Manual memory management is used by low level languages such as C, where the developer is expected to allocate and free memory on their own. I want my language to be easy to learn and use, so this is not an option at all. We could simply free all memory when its original creation leaves the scope (which actually is an option!)
 
 To read code into executable instructions, we first need to convert the string of characters into tokens: keywords, string or number literals, etc. Any possible piece of the code should be encodable as a Token. something like this would be trivially easy with Rust's expansive enum system, and i found that luckily, i could achieve something similar using Odin's unions [SHOW EXAMPLE]. i started by writing an example program in my language, which also gave me the opportunity to make some key decisions about how the syntax should work.
 
@@ -70,6 +78,8 @@ To read code into executable instructions, we first need to convert the string o
 - Annotate code 
 - Produce evidence of testing at each iteration 
 - Produce evidence of failed tests along with how errors were fixed
+
+
 
 ---
 ## Evaluation
