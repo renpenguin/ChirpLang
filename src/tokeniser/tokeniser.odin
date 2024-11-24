@@ -31,23 +31,28 @@ Token :: union #no_nil {
 }
 
 // Takes a block of code in the form of plain text as parameter and returns it as a dynamic array of tokens.
-tokenise :: proc(input: string) -> (tokens: TokenStream) {
+tokenise :: proc(input: string, keep_comments := false) -> (tokens: TokenStream) {
 	input_chars := utf8.string_to_runes(strings.trim_space(input))
 	defer delete(input_chars)
 
 	for i := 0; i < len(input_chars); i += 1 {
-		tokenise_next_char(&tokens, input_chars, &i)
+		tokenise_next_char(&tokens, input_chars, &i, keep_comments)
 	}
 
 	// Every tokenstream should end with one trailing new line
-	append(&tokens, NewLine)
-
+	if is_new_line(tokens[len(tokens) - 1]) do tokens[len(tokens) - 1] = NewLine
+	else do append(&tokens, NewLine)
 	return
 }
 
 // Capture the next
 @(private = "file")
-tokenise_next_char :: proc(tokens: ^TokenStream, input_chars: []rune, char_index: ^int) {
+tokenise_next_char :: proc(
+	tokens: ^TokenStream,
+	input_chars: []rune,
+	char_index: ^int,
+	keep_comments: bool,
+) {
 	c := input_chars[char_index^]
 	if strings.is_space(c) && c != '\n' do return // Ignore whitespace
 
@@ -59,7 +64,7 @@ tokenise_next_char :: proc(tokens: ^TokenStream, input_chars: []rune, char_index
 
 	// Comments
 	if comment, ok := try_match_to_comment(input_chars, char_index); ok {
-		append(tokens, comment)
+		if keep_comments do append(tokens, comment)
 		return
 	}
 
@@ -102,7 +107,7 @@ tokenise_next_char :: proc(tokens: ^TokenStream, input_chars: []rune, char_index
 	case ']': append(tokens, Bracket{.Square, .Closing})
 	case '{': append(tokens, Bracket{.Curly,  .Opening})
 	case '}':
-		// If no newline before }, add a newline first
+		// If no newline before }, add a newline first // TODO: this should probably only be in the formatter
 		if !is_new_line(tokens[len(tokens) - 1]) {
 			append_new_line(tokens)
 		}
