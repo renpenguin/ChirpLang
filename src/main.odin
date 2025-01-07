@@ -66,19 +66,6 @@ run :: proc(input: string) {
 	}
 }
 
-format :: proc(input: string, to_path: string) {
-	tokens := tokeniser.tokenise(input, true)
-	defer tokeniser.destroy_token_stream(tokens)
-
-	formatted := formatter.format(tokens)
-
-	err := os.write_entire_file_or_err(to_path, transmute([]u8)formatted)
-	if err != nil {
-		fmt.eprintln("Error writing to file:", err)
-		os.exit(1)
-	}
-}
-
 main :: proc() {
 	when ODIN_DEBUG { 	// Memory Allocation Tracker
 		track: mem.Tracking_Allocator
@@ -102,28 +89,21 @@ main :: proc() {
 		}
 	}
 
-	if len(os.args) != 3 {
-		fmt.eprintln("Argument error: Please use either `chirp run <file>` or `chirp format <file>`")
+	if len(os.args) != 2 {
+		fmt.eprintln("Argument error: Please use `chirp <file>`")
 		os.exit(1)
 	}
 
-	if !os.exists(os.args[2]) {
-		fmt.eprintln("Argument error: argument 2 is not a valid path")
+	if !os.exists(os.args[1]) {
+		fmt.eprintln("Argument error: first argument is not a valid path. please pass a valid path")
 		os.exit(1)
 	}
 
-	input, err := os.read_entire_file_from_filename_or_err(os.args[2])
+	input, err := os.read_entire_file_from_filename_or_err(os.args[1])
 	if err != nil {
 		fmt.eprintln("File read error:", err)
 	}
 	defer delete(input)
 
-	switch os.args[1] {
-		case "run":
-			run(string(input))
-		case "format":
-			format(string(input), os.args[2])
-		case:
-			fmt.eprintln("Argument error: argument 1 was not `run` or `format`")
-	}
+	run(string(input))
 }
