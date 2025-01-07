@@ -11,12 +11,13 @@ Variable :: d.Variable
 Scope :: d.Scope
 
 ScopeError :: struct {
-	err_source: union #no_nil {
+	err_source:   union #no_nil {
 		[]p.NameDefinition,
 		p.NameDefinition,
 		Module,
 	},
-	ok:         bool,
+	redefinition: bool,
+	ok:           bool,
 }
 
 // Builds a `Scope` value for the block and any nested functions or libraries. This will remove all `FunctionDefinition`s and `ImportStatement`s from the block
@@ -44,6 +45,9 @@ build_scope :: proc(
 		}
 
 		if func_declaration, ok := instruction.(p.FunctionDefinition); ok {
+			if search_scope(&scope, func_declaration.name) != nil {
+				return scope, ScopeError{err_source = func_declaration.name, redefinition = true}
+			}
 			function_scope := Scope {
 				parent_scope = &scope,
 			}

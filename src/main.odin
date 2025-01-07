@@ -35,7 +35,11 @@ run :: proc(input: string) {
 		case []parser.NameDefinition:
 			fmt.eprintln("Scope error: invalid path:", scope_err)
 		case parser.NameDefinition:
-			fmt.eprintln("Scope error: couldn't find name at path:", scope_err)
+			if scope_err.redefinition {
+				fmt.eprintln("Scope error: redefinition of function", scope_err.err_source)
+			} else {
+				fmt.eprintln("Scope error: couldn't find name at path:", scope_err)
+			}
 		case scope.Module:
 			fmt.eprintln("Scope error: imported module already exists:", scope_err)
 		}
