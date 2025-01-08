@@ -41,6 +41,7 @@ build_expression :: proc(
 	} = .None
 
 	for i := 0; i < len(tokens); i += 1 {
+		if is_new_line(tokens[i]) do continue
 		to_store: Maybe(Expression) = nil
 
 		if op, ok := tokens[i].(Operator); ok {
@@ -151,7 +152,7 @@ build_expression :: proc(
 	return
 }
 
-// Captures all `Token`s until a newline into an `Expression`
+// Captures all `Token`s until a newline (and all opened brackets have been closed) into an `Expression`
 @(private)
 capture_expression :: proc(
 	tokens: t.TokenStream,
@@ -163,9 +164,16 @@ capture_expression :: proc(
 	captured_tokens: t.TokenStream
 	defer delete(captured_tokens)
 
+	bracket_depth := 0
 	for token_index^ < len(tokens) {
-		if t.is_new_line(tokens[token_index^]) do break
-
+		if bracket, ok := tokens[token_index^].(t.Bracket); ok {
+			bracket_depth += bracket.state == .Opening ? 1 : -1
+			if bracket_depth < 0 do return nil, SyntaxError {
+				msg = "Found closing bracket with no matching opening bracket",
+				found = tokens[token_index^],
+			}
+		}
+		if t.is_new_line(tokens[token_index^]) && bracket_depth == 0 do break
 		append(&captured_tokens, tokens[token_index^])
 		token_index^ += 1
 	}
@@ -202,7 +210,7 @@ capture_arg_until_closing_bracket :: proc(
 	}
 	pop(&captured_tokens) // Remove last `)`
 
-	if len(captured_tokens) == 0 do return nil, SyntaxError{ok=true}, was_comma
+	if len(captured_tokens) == 0 do return nil, SyntaxError{ok = true}, was_comma
 
 	return build_expression(captured_tokens), was_comma
 }
