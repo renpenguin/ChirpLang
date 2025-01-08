@@ -61,7 +61,7 @@ build_scope :: proc(
 		// Evaluate constants (for math:constants:pi)
 	}
 
-	return scope, evaluate_block_with_scope(block^, scope^)
+	return scope, evaluate_block_with_scope(block^, scope)
 }
 
 // Recursively destroy everything stored in the scope

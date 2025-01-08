@@ -14,7 +14,7 @@ execute_block :: proc(
 ) {
 	using p
 
-	for instruction in block {
+	iter_instructions: for instruction in block {
 		switch _ in instruction {
 		case VariableDefinition:
 			var_def := instruction.(p.VariableDefinition)
@@ -23,7 +23,13 @@ execute_block :: proc(
 			contents, err = execute_expression(var_def.expr, scope)
 			if !is_runtime_error_ok(err) do return
 
-			append(&scope.constants, s.Variable{name = var_def.name, contents = contents})
+			to_assign := s.Variable{var_def.name, contents}
+			for var, i in scope.constants { // Redefining existing variables
+				if var.name != var_def.name do continue
+				scope.constants[i] = to_assign
+				continue iter_instructions
+			}
+			append(&scope.constants, to_assign)
 		case VariableAssignment:
 			err = assign_operation(instruction.(p.VariableAssignment), scope)
 			if !is_runtime_error_ok(err) do return

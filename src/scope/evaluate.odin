@@ -4,10 +4,9 @@ import p "../parser"
 import "core:fmt"
 
 // Make sure all involved blocks' instructions are only accessing values they have access to
-evaluate_block_with_scope :: proc(block: p.Block, scope: Scope) -> (err := ScopeError{ok = true}) {
+evaluate_block_with_scope :: proc(block: p.Block, scope: ^Scope) -> (err := ScopeError{ok = true}) {
 	using p
 
-	scope := scope
 	for instruction in block {
 		switch _ in instruction {
 		case ImportStatement, FunctionDefinition:
@@ -23,7 +22,7 @@ evaluate_block_with_scope :: proc(block: p.Block, scope: Scope) -> (err := Scope
 		case VariableAssignment:
 			var_ass := instruction.(VariableAssignment)
 
-			err = evaluate_name_ref_with_scope(var_ass.target, .Variable, scope)
+			err = evaluate_name_ref_with_scope(var_ass.target, .Variable, scope^)
 			if !err.ok do return
 
 			err = evaluate_expression_with_scope(var_ass.expr, scope)
@@ -46,7 +45,7 @@ evaluate_block_with_scope :: proc(block: p.Block, scope: Scope) -> (err := Scope
 @(private = "file")
 evaluate_expression_with_scope :: proc(
 	expr: p.Expression,
-	scope: Scope,
+	scope: ^Scope,
 ) -> (
 	err := ScopeError{ok = true},
 ) {
@@ -54,13 +53,29 @@ evaluate_expression_with_scope :: proc(
 	case p.FunctionCall:
 		func_call := expr.(p.FunctionCall)
 
-		err = evaluate_name_ref_with_scope(func_call.name, .Function, scope)
+		err = evaluate_name_ref_with_scope(func_call.name, .Function, scope^)
 		if !err.ok do return
 
 		for arg in func_call.args {
 			err = evaluate_expression_with_scope(arg, scope)
 			if !err.ok do return
 		}
+
+		found: ScopeItem
+		found, _ = search_for_reference(scope, func_call.name)
+
+		if interp_func, ok := found.(Function).(InterpretedFunction); ok {
+			func_scope := new(Scope)
+			defer destroy_scope(func_scope)
+			func_scope.parent_scope = interp_func.parent_scope
+
+			for arg in interp_func.args { // TODO: check arg types/count against passed args
+				append(&func_scope.constants, Variable{arg.name, p.None})
+			}
+
+			err = evaluate_block_with_scope(interp_func.block, func_scope)
+		}
+
 	case p.Operation:
 		op := expr.(p.Operation)
 
@@ -71,7 +86,7 @@ evaluate_expression_with_scope :: proc(
 	case p.FormatString:
 		panic("todo") // TODO: parse FormatString expressions
 	case p.NameReference:
-		err = evaluate_name_ref_with_scope(expr.(p.NameReference), .Variable, scope)
+		err = evaluate_name_ref_with_scope(expr.(p.NameReference), .Variable, scope^)
 		if !err.ok do return
 
 	case p.Value:
