@@ -25,7 +25,7 @@ mod_time_sleep :: proc(
 @private
 mod_time :: proc() -> d.Module {
 	using p, d
-	mod := Module{NameDefinition("time"), Scope{}}
+	mod := Module{NameDefinition("time"), new(Scope)}
 	append(&mod.scope.functions, BuiltInFunction{NameDefinition("sleep"), mod_time_sleep})
 
 	return mod

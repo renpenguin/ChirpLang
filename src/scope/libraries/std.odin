@@ -21,9 +21,10 @@ std_print :: proc(
 }
 
 // Generate the standard library
-build_std_scope :: proc() -> (std: d.Scope) {
+build_std_scope :: proc() -> (std: ^d.Scope) {
 	using p
 
+	std = new(d.Scope)
 	append(&std.functions, d.BuiltInFunction{NameDefinition("print"), std_print})
 
 	return

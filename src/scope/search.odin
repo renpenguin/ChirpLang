@@ -12,7 +12,7 @@ ScopeItem :: union {
 find_module :: proc(scope: ^Scope, query: p.NameDefinition) -> (found_scope: ^Scope, ok: bool) {
 	for &module in scope.modules {
 		if module.name == query {
-			return &module.scope, true
+			return module.scope, true
 		}
 	}
 

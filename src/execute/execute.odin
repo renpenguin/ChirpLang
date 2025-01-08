@@ -7,12 +7,11 @@ import "core:fmt"
 
 execute_block :: proc(
 	block: p.Block,
-	scope: s.Scope,
+	scope: ^s.Scope,
 ) -> (
 	return_val: p.Value = p.None,
 	err: RuntimeError = NoErrorUnit,
 ) {
-	scope := scope
 	using p
 
 	for instruction in block {
@@ -21,28 +20,28 @@ execute_block :: proc(
 			var_def := instruction.(p.VariableDefinition)
 
 			contents: p.Value
-			contents, err = execute_expression(var_def.expr, &scope)
+			contents, err = execute_expression(var_def.expr, scope)
 			if !is_runtime_error_ok(err) do return
 
 			append(&scope.constants, s.Variable{name = var_def.name, contents = contents})
 		case VariableAssignment:
-			err = assign_operation(instruction.(p.VariableAssignment), &scope)
+			err = assign_operation(instruction.(p.VariableAssignment), scope)
 			if !is_runtime_error_ok(err) do return
 		case Forever:
 			forever_block := instruction.(Forever).block
 			for {
-				forever_scope := s.Scope {
-					parent_scope = &scope,
-				}
+				forever_scope := new(s.Scope)
 				defer s.destroy_scope(forever_scope)
+				forever_scope.parent_scope = scope
+
 				_, err = execute_block(forever_block, forever_scope)
 				if !is_runtime_error_ok(err) do return p.None, err
 			}
 		case Expression:
-			_, err = execute_expression(instruction.(Expression), &scope)
+			_, err = execute_expression(instruction.(Expression), scope)
 			if !is_runtime_error_ok(err) do return p.None, err
 		case p.Return:
-			return_val, err = execute_expression(Expression(instruction.(Return)), &scope)
+			return_val, err = execute_expression(Expression(instruction.(Return)), scope)
 			if !is_runtime_error_ok(err) do return p.None, err
 			return
 
@@ -124,10 +123,9 @@ call_function :: proc(
 	case s.InterpretedFunction:
 		interp_func_def := func.(s.InterpretedFunction)
 
-		func_scope := s.Scope {
-			parent_scope = scope,
-		}
+		func_scope := new(s.Scope)
 		defer s.destroy_scope(func_scope)
+		func_scope.parent_scope = interp_func_def.parent_scope
 
 		if len(interp_func_def.args) != len(func_call.args) do return p.None, s.BuiltInFunctionError{msg = "Incorrect number of arguments passed to function call"}
 		for def_arg, i in interp_func_def.args {

@@ -3,7 +3,10 @@ package scope_defs
 import p "../../parser"
 
 // Defines a function. Expected pattern `func $name$($name$, ...) $block$`
-InterpretedFunction :: distinct p.FunctionDefinition
+InterpretedFunction :: struct {
+	using func: p.FunctionDefinition,
+	parent_scope: ^Scope,
+}
 
 // Error returned by external functions in case of an error with the input values
 BuiltInFunctionError :: struct {

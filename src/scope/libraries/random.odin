@@ -27,7 +27,7 @@ mod_random_range :: proc(
 @private
 mod_random :: proc() -> d.Module {
 	using p, d
-	mod := Module{NameDefinition("random"), Scope{}}
+	mod := Module{NameDefinition("random"), new(Scope)}
 	append(&mod.scope.functions, BuiltInFunction{NameDefinition("range"), mod_random_range})
 
 	return mod

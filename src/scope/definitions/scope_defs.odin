@@ -11,7 +11,7 @@ Scope :: struct {
 
 Module :: struct {
 	name:  p.NameDefinition,
-	scope: Scope,
+	scope: ^Scope,
 }
 
 Variable :: struct {

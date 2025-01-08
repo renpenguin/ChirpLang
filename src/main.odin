@@ -27,7 +27,7 @@ run :: proc(input: string) {
 	std := libraries.build_std_scope()
 	defer scope.destroy_scope(std)
 
-	block_scope, scope_err := scope.build_scope(&block, &std)
+	block_scope, scope_err := scope.build_scope(&block, std)
 	defer scope.destroy_scope(block_scope)
 
 	if !scope_err.ok {
