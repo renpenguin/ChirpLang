@@ -1,18 +1,15 @@
-import math, random, time
+import random, time
 
-//If there is no scope body, this function will be called automatically
 func main() {
 	print("hi!")
-	var dice_roll = random:range(1,5 + 1)
-	print(f"Dice roll: {dice_roll}")
 
-	var num = 0.0
+	var total = 0
 	forever {
-		num += math:constants:pi / (3.0 * 4.0)
-		print(f"Repeated { num } times")
+		let dice_roll = random:range(1,6)
+		print(f"Rolled a {dice_roll}!")
 
-		var sin_num = math:sin(num)
-		print(f"sin({ num }) = { sin_num }")
+		total += dice_roll
+		print("Total:", total)
 
 		time:sleep(0.1)
 	}

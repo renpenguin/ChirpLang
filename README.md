@@ -5,14 +5,14 @@ A statically typed, multi-paradigm interpreted language, made to be a beginner p
 A blog post about the development of this language can be found [here](https://redpengu.in/blog/2025/chirp-lang)
 
 A simple Chirp program looks like this:
-```go
+```swift
 import random, time
 
 print("hello world!")
 
 var total = 0
 forever {
-	var dice_roll = random:range(1,6)
+	let dice_roll = random:range(1,6)
 	print(f"Rolled a {dice_roll}!")
 
 	total += dice_roll
