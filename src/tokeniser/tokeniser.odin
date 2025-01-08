@@ -27,16 +27,15 @@ Token :: union #no_nil {
 	Literal,
 	CommaType,
 	NewLineType,
-	Comment,
 }
 
 // Takes a block of code in the form of plain text as parameter and returns it as a dynamic array of tokens.
-tokenise :: proc(input: string, keep_comments := false) -> (tokens: TokenStream) {
+tokenise :: proc(input: string,) -> (tokens: TokenStream) {
 	input_chars := utf8.string_to_runes(strings.trim_space(input))
 	defer delete(input_chars)
 
 	for i := 0; i < len(input_chars); i += 1 {
-		tokenise_next_char(&tokens, input_chars, &i, keep_comments)
+		tokenise_next_char(&tokens, input_chars, &i)
 	}
 
 	// Every tokenstream should end with one trailing new line
@@ -45,13 +44,12 @@ tokenise :: proc(input: string, keep_comments := false) -> (tokens: TokenStream)
 	return
 }
 
-// Capture the next
+// Capture the next character from the rune slice, starting from `char_index`
 @(private = "file")
 tokenise_next_char :: proc(
 	tokens: ^TokenStream,
 	input_chars: []rune,
 	char_index: ^int,
-	keep_comments: bool,
 ) {
 	c := input_chars[char_index^]
 	if strings.is_space(c) && c != '\n' do return // Ignore whitespace
@@ -63,9 +61,9 @@ tokenise_next_char :: proc(
 	}
 
 	// Comments
-	if comment, ok := try_match_to_comment(input_chars, char_index); ok {
-		if keep_comments do append(tokens, comment)
-		else do delete(string(comment))
+	if c == '/' && input_chars[char_index^ + 1] == '/' {
+		char_index^ += 2
+		for char_index^ + 1 < len(input_chars) && input_chars[char_index^ + 1] != '\n' do char_index^ += 1
 		return
 	}
 
@@ -107,14 +105,8 @@ tokenise_next_char :: proc(
 	case '[': append(tokens, Bracket{.Square, .Opening})
 	case ']': append(tokens, Bracket{.Square, .Closing})
 	case '{': append(tokens, Bracket{.Curly,  .Opening})
-	case '}':
-		// If no newline before }, add a newline first // TODO: this should probably only be in the formatter
-		if !is_new_line(tokens[len(tokens) - 1]) {
-			append_new_line(tokens)
-		}
-		append(tokens, Bracket{.Curly, .Closing})
+	case '}': append(tokens, Bracket{.Curly, .Closing})
 
-	case:
-		fmt.println("unexpected token!", c)
+	case: fmt.println("unexpected token!", c)
 	}
 }
