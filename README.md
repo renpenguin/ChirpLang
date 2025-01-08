@@ -1,8 +1,27 @@
 # Chirp Language
 
-A statically typed interpreted language, made to be a beginner programming language that doesn't sacrifice long-term quality of life for short-term readability. Examples can be found in `examples/`.
+A statically typed, multi-paradigm interpreted language, made to be a beginner programming language that doesn't sacrifice long-term quality of life for short-term readability. Examples can be found in `examples/`.
 
 A blog post about the development of this language can be found [here](https://redpengu.in/blog/2025/chirp-lang)
+
+A simple Chirp program looks like this:
+```go
+import random, time
+
+print("hello world!")
+
+var total = 0
+forever {
+	var dice_roll = random:range(1,6)
+	print(f"Rolled a {dice_roll}!")
+
+	total += dice_roll
+	print(f"Total: {total}")
+
+	time:sleep(0.1)
+}
+```
+
 ## Compiling from source:
 
 ### Nix
