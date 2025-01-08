@@ -18,12 +18,16 @@ evaluate_block_with_scope :: proc(block: p.Block, scope: ^Scope) -> (err := Scop
 			err = evaluate_expression_with_scope(var_def.expr, scope)
 			if !err.ok do return
 
-			append(&scope.constants, Variable{var_def.name, p.None})
+			append(&scope.constants, Variable{var_def.name, p.None, var_def.mutable})
 		case VariableAssignment:
 			var_ass := instruction.(VariableAssignment)
 
 			err = evaluate_name_ref_with_scope(var_ass.target, .Variable, scope^)
 			if !err.ok do return
+
+			found, _ := search_for_reference(scope, var_ass.target)
+
+			if !found.(^Variable).mutable do return ScopeError{err_source = var_ass.target.name, type = .ModifiedImmutable}
 
 			err = evaluate_expression_with_scope(var_ass.expr, scope)
 			if !err.ok do return
@@ -70,7 +74,7 @@ evaluate_expression_with_scope :: proc(
 			func_scope.parent_scope = interp_func.parent_scope
 
 			for arg in interp_func.args { // TODO: check arg types/count against passed args
-				append(&func_scope.constants, Variable{arg.name, p.None})
+				append(&func_scope.constants, Variable{arg.name, p.None, false})
 			}
 
 			err = evaluate_block_with_scope(interp_func.block, func_scope)

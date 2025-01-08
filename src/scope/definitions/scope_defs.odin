@@ -18,4 +18,5 @@ Variable :: struct {
 	name:     p.NameDefinition,
 	// Variable can be of type int, float, string or bool
 	contents: p.Value,
+	mutable:  bool,
 }

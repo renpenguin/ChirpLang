@@ -7,6 +7,7 @@ BuiltInKeyword :: enum {
 	Import,
 	Func,
 	Var,
+	Let,
 	If, // NYI
 	Else, // NYI
 	For, // NYI
@@ -78,6 +79,7 @@ try_match_to_builtin_keyword :: proc(custom_keyword: CustomKeyword) -> Keyword {
 	case "import": 	 return .Import
 	case "func": 	 return .Func
 	case "var": 	 return .Var
+	case "let": 	 return .Let
 	case "if": 		 return .If
 	case "else": 	 return .Else
 	case "for": 	 return .For

@@ -26,7 +26,7 @@ mod_math :: proc() -> d.Module {
 	mod := Module{NameDefinition("math"), new(Scope)}
 	append(&mod.scope.functions, BuiltInFunction{NameDefinition("sin"), mod_math_sin})
 	std_math_constants := Module{NameDefinition("constants"), new(Scope)}
-	append(&std_math_constants.scope.constants, Variable{NameDefinition("pi"), Value(math.PI)})
+	append(&std_math_constants.scope.constants, Variable{NameDefinition("pi"), Value(math.PI), false})
 	append(&mod.scope.modules, std_math_constants)
 
 	return mod

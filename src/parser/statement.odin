@@ -5,10 +5,11 @@ import t "../tokeniser"
 // Brings libraries or functions into scope. Expected pattern `import $library$, ...;`
 ImportStatement :: distinct [dynamic]NameReference
 
-// Defines a new variable in the current scope. Expected pattern `var $name$ = $expr$;`
+// Defines a new variable in the current scope. Expected pattern `let $name$ = $expr$;` or `var $name$ = $expr$;`
 VariableDefinition :: struct {
-	name: NameDefinition,
-	expr: Expression,
+	name:    NameDefinition,
+	expr:    Expression,
+	mutable: bool,
 }
 
 // Operation that either is or ends with `=`. Expected pattern `$name$ $operator$ $expr$;`
@@ -203,9 +204,11 @@ try_match_var_definition :: proc(
 	err := SyntaxError{ok = true},
 ) {
 	using t
-	if tokens[char_index^] != Token(Keyword(.Var)) do return
+	if tokens[char_index^] != Token(Keyword(.Var)) && tokens[char_index^] != Token(Keyword(.Let)) do return
 	var_definition = VariableDefinition{}
 	var_def := &var_definition.?
+
+	var_def.mutable = (tokens[char_index^].(t.Keyword) == .Var)
 
 	char_index^ += 1
 	var_def.name, err = expect_name_def(

@@ -23,7 +23,7 @@ execute_block :: proc(
 			contents, err = execute_expression(var_def.expr, scope)
 			if !is_runtime_error_ok(err) do return
 
-			to_assign := s.Variable{var_def.name, contents}
+			to_assign := s.Variable{var_def.name, contents, var_def.mutable}
 			for var, i in scope.constants { // Redefining existing variables
 				if var.name != var_def.name do continue
 				scope.constants[i] = to_assign
@@ -140,7 +140,7 @@ call_function :: proc(
 			if !is_runtime_error_ok(err) do return
 			if def_arg.type != p.get_value_type(passed_arg) do return p.None, s.BuiltInFunctionError{msg = "Incorrect argument type"}
 
-			append(&func_scope.constants, s.Variable{def_arg.name, passed_arg})
+			append(&func_scope.constants, s.Variable{def_arg.name, passed_arg, false})
 		}
 
 		return_val, err = execute_block(interp_func_def.block, func_scope)

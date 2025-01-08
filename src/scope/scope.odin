@@ -18,6 +18,7 @@ ScopeError :: struct {
 	},
 	type:       enum {
 		Redefinition,
+		ModifiedImmutable,
 		ModuleNotFound,
 		InvalidPath,
 		NotFoundAtPath,
