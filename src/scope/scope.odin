@@ -11,13 +11,18 @@ Variable :: d.Variable
 Scope :: d.Scope
 
 ScopeError :: struct {
-	err_source:   union #no_nil {
+	err_source: union #no_nil {
 		[]p.NameDefinition,
 		p.NameDefinition,
 		Module,
 	},
-	redefinition: bool,
-	ok:           bool,
+	type:       enum {
+		Redefinition,
+		ModuleNotFound,
+		InvalidPath,
+		NotFoundAtPath,
+	},
+	ok:         bool,
 }
 
 // Builds a `Scope` value for the block and any nested functions or libraries. This will remove all `FunctionDefinition`s and `ImportStatement`s from the block
@@ -35,10 +40,10 @@ build_scope :: proc(
 		if import_statement, ok := instruction.(p.ImportStatement); ok {
 			for name_ref in import_statement {
 				module, ok := l.try_access_library(name_ref)
-				if !ok do return scope, ScopeError{err_source = name_ref.name}
+				if !ok do return scope, ScopeError{err_source = name_ref.name, type = .ModuleNotFound}
 
 				if _, mod_already_exists := find_module(scope, module.name); mod_already_exists {
-					return scope, ScopeError{err_source = module}
+					return scope, ScopeError{err_source = module, type = .Redefinition}
 				}
 
 				append(&scope.modules, module)
@@ -47,7 +52,7 @@ build_scope :: proc(
 
 		if func_declaration, ok := instruction.(p.FunctionDefinition); ok {
 			if search_scope(scope, func_declaration.name) != nil {
-				return scope, ScopeError{err_source = func_declaration.name, redefinition = true}
+				return scope, ScopeError{err_source = func_declaration.name, type = .Redefinition}
 			}
 
 			append(&scope.functions, InterpretedFunction{func_declaration, scope})

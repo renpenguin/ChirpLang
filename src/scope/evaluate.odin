@@ -85,20 +85,21 @@ evaluate_name_ref_with_scope :: proc(name_ref: p.NameReference, type: enum {
 		Module,
 		Function,
 		Variable,
-	}, scope: Scope) -> (err := ScopeError{ok = true}) {
+	}, scope: Scope) -> (err: ScopeError) {
 	scope := scope // TODO: `search_for_reference` maybe shouldnt take a reference to the scope? but it's also required for
 
 	found_item: ScopeItem
 	found_item, err = search_for_reference(&scope, name_ref)
-	if !err.ok do return ScopeError{err_source = name_ref.name}
+	if !err.ok do return
 
+	err = ScopeError{err_source = name_ref.name, type = .NotFoundAtPath, ok = true}
 	switch type { 	// TODO: make this able to handle passing function references
 	case .Module:
-		if _, ok := found_item.(Module); !ok do return ScopeError{err_source = name_ref.name}
+		if _, ok := found_item.(Module); !ok do err.ok = false
 	case .Function:
-		if _, ok := found_item.(Function); !ok do return ScopeError{err_source = name_ref.name}
+		if _, ok := found_item.(Function); !ok do err.ok = false
 	case .Variable:
-		if _, ok := found_item.(^Variable); !ok do return ScopeError{err_source = name_ref.name}
+		if _, ok := found_item.(^Variable); !ok do err.ok = false
 	}
 
 	return

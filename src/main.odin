@@ -31,17 +31,27 @@ run :: proc(input: string) {
 	defer scope.destroy_scope(block_scope)
 
 	if !scope_err.ok {
-		switch _ in scope_err.err_source {
-		case []parser.NameDefinition:
-			fmt.eprintln("Scope error: invalid path:", scope_err)
-		case parser.NameDefinition:
-			if scope_err.redefinition {
-				fmt.eprintln("Scope error: redefinition of function", scope_err.err_source)
+		switch scope_err.type {
+		case .Redefinition:
+			if _, ok := scope_err.err_source.(scope.Module); ok {
+				fmt.eprintln(
+					"Scope error: attempt to import module that already exists:",
+					scope_err.err_source,
+				)
 			} else {
-				fmt.eprintln("Scope error: couldn't find name at path:", scope_err)
+				fmt.eprintln("Scope error: redefinition of function", scope_err.err_source)
 			}
-		case scope.Module:
-			fmt.eprintln("Scope error: imported module already exists:", scope_err)
+		case .ModifiedImmutable:
+			fmt.eprintln(
+				"Scope error: attempted to modify immutable variable:",
+				scope_err.err_source,
+			)
+		case .ModuleNotFound:
+			fmt.eprintln("Scope error: couldn't find module:", scope_err.err_source)
+		case .InvalidPath:
+			fmt.eprintln("Scope error: invalid path:", scope_err.err_source)
+		case .NotFoundAtPath:
+			fmt.eprintln("Scope error: couldn't find name at path:", scope_err.err_source)
 		}
 		os.exit(1)
 	}
