@@ -2,35 +2,6 @@ package parser
 
 import t "../tokeniser"
 
-// Brings libraries or functions into scope. Expected pattern `import $library$, ...;`
-ImportStatement :: distinct [dynamic]NameReference
-
-// Defines a new variable in the current scope. Expected pattern `let $name$ = $expr$;` or `var $name$ = $expr$;`
-VariableDefinition :: struct {
-	name:    NameDefinition,
-	expr:    Expression,
-	mutable: bool,
-}
-
-// Operation that either is or ends with `=`. Expected pattern `$name$ $operator$ $expr$;`
-VariableAssignment :: struct {
-	target:   NameReference,
-	operator: t.AssignmentOperator,
-	expr:     Expression,
-}
-
-FunctionArgument :: struct {
-	name: NameDefinition,
-	type: ValueType,
-}
-// Defines a function. Expected pattern `func $name$($name$, ...) $block$`
-FunctionDefinition :: struct {
-	name:        NameDefinition,
-	args:        [dynamic]FunctionArgument,
-	return_type: ValueType,
-	block:       Block,
-}
-
 // Executes a block until `Break` is triggered. Expected patten `forever $block$`
 Forever :: struct {
 	block: Block,
@@ -43,6 +14,7 @@ Statement :: union {
 	VariableDefinition,
 	VariableAssignment,
 	FunctionDefinition,
+	IfStatement,
 	Forever,
 	Expression,
 	Return,
@@ -81,6 +53,9 @@ capture_block :: proc(
 	return parse(captured_tokens)
 }
 
+// Brings libraries or functions into scope. Expected pattern `import $library$, ...;`
+ImportStatement :: distinct [dynamic]NameReference
+
 // Try to match an `ImportStatement` under the cursor
 @(private)
 try_match_import :: proc(
@@ -116,6 +91,18 @@ try_match_import :: proc(
 	}
 
 	return
+}
+
+// Defines a function. Expected pattern `func $name$($name$, ...) $block$`
+FunctionDefinition :: struct {
+	name:        NameDefinition,
+	args:        [dynamic]FunctionArgument,
+	return_type: ValueType,
+	block:       Block,
+}
+FunctionArgument :: struct {
+	name: NameDefinition,
+	type: ValueType,
 }
 
 // Try to match a `FunctionDefinition` statement under the cursor
@@ -194,6 +181,13 @@ try_match_func_definition :: proc(
 	return func_def, err
 }
 
+// Defines a new variable in the current scope. Expected pattern `let $name$ = $expr$;` or `var $name$ = $expr$;`
+VariableDefinition :: struct {
+	name:    NameDefinition,
+	expr:    Expression,
+	mutable: bool,
+}
+
 // Try to match a `VariableDefinition` statement under the cursor
 @(private)
 try_match_var_definition :: proc(
@@ -230,6 +224,13 @@ try_match_var_definition :: proc(
 	if !err.ok do return
 
 	return
+}
+
+// Operation that either is or ends with `=`. Expected pattern `$name$ $operator$ $expr$;`
+VariableAssignment :: struct {
+	target:   NameReference,
+	operator: t.AssignmentOperator,
+	expr:     Expression,
 }
 
 // Try to match a `VariableAssignment` statement under the cursor

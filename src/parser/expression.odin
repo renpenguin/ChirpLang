@@ -157,6 +157,7 @@ build_expression :: proc(
 capture_expression :: proc(
 	tokens: t.TokenStream,
 	token_index: ^int,
+	end_token_matcher: proc(token: t.Token) -> bool = t.is_new_line,
 ) -> (
 	expr: Expression,
 	err: SyntaxError,
@@ -166,6 +167,7 @@ capture_expression :: proc(
 
 	bracket_depth := 0
 	for token_index^ < len(tokens) {
+		if end_token_matcher(tokens[token_index^]) && bracket_depth == 0 do break
 		if bracket, ok := tokens[token_index^].(t.Bracket); ok {
 			bracket_depth += bracket.state == .Opening ? 1 : -1
 			if bracket_depth < 0 do return nil, SyntaxError {
@@ -173,7 +175,6 @@ capture_expression :: proc(
 				found = tokens[token_index^],
 			}
 		}
-		if t.is_new_line(tokens[token_index^]) && bracket_depth == 0 do break
 		append(&captured_tokens, tokens[token_index^])
 		token_index^ += 1
 	}
@@ -191,26 +192,15 @@ capture_arg_until_closing_bracket :: proc(
 	err: SyntaxError,
 	was_comma: bool,
 ) {
-	using t
-	captured_tokens: TokenStream
-	defer delete(captured_tokens)
+	token_index^ += 1
+	expr, err = capture_expression(tokens, token_index, is_end_of_function_arg)
 
-	bracket_depth := 1
-	for bracket_depth > 0 {
-		token_index^ += 1
-		token := tokens[token_index^]
-		if token == Token(Bracket{.Round, .Opening}) do bracket_depth += 1
-		if token == Token(Bracket{.Round, .Closing}) do bracket_depth -= 1
+	_, was_comma = tokens[token_index^].(t.CommaType)
+	return
+}
 
-		append(&captured_tokens, token)
-		if token == Token(Comma) && bracket_depth == 1 {
-			was_comma = true
-			break
-		}
-	}
-	pop(&captured_tokens) // Remove last `)`
-
-	if len(captured_tokens) == 0 do return nil, SyntaxError{ok = true}, was_comma
-
-	return build_expression(captured_tokens), was_comma
+@(private = "file")
+is_end_of_function_arg :: proc(token: t.Token) -> bool {
+	_, is_comma := token.(t.CommaType)
+	return is_comma || token == t.Token(t.Bracket{.Round, .Closing})
 }
