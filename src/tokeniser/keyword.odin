@@ -8,8 +8,8 @@ BuiltInKeyword :: enum {
 	Func,
 	Var,
 	Let,
-	If, // NYI
-	Else, // NYI
+	If,
+	Else,
 	For, // NYI
 	While, // NYI
 	Forever,

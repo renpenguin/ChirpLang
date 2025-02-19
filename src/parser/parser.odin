@@ -40,6 +40,15 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err := SyntaxError
 			continue
 		}
 
+		// If statement
+		if_stat: Maybe(IfStatement)
+		if_stat, err = try_match_if_statement(tokens, &i)
+		if !err.ok do return
+		if statement, ok := if_stat.?; ok {
+			append(&instructions, statement)
+			continue
+		}
+
 		// Variable definition
 		var_def: Maybe(VariableDefinition)
 		var_def, err = try_match_var_definition(tokens, &i)

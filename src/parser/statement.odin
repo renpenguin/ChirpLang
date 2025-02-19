@@ -264,3 +264,61 @@ try_match_var_assignment :: proc(
 
 	return
 }
+
+// A block that is executed if the condition evaluates to true. Expected pattern ` if $expr$ $block$ [else $IfStatement$|$block$]`
+IfStatement :: struct {
+	condition:   Expression,
+	true_block:  Block,
+	else_branch: ElseBranch,
+}
+ElseBranch :: union {
+	^IfStatement,
+	Block,
+}
+
+@(private = "file")
+match_opening_curly_bracket :: proc(token: t.Token) -> bool {
+	return token == t.Token(t.Bracket{.Curly, .Opening})
+}
+
+// Try to match an `IfStatement` statement under the cursor, and search for else branches
+@(private)
+try_match_if_statement :: proc(
+	tokens: t.TokenStream,
+	char_index: ^int,
+) -> (
+	if_statement: Maybe(IfStatement),
+	err := SyntaxError{ok = true},
+) {
+	using t
+	if tokens[char_index^] != Token(Keyword(.If)) do return
+	if_statement = IfStatement{}
+	if_stat := &if_statement.?
+
+	char_index^ += 1
+	if_stat.condition, err = capture_expression(tokens, char_index, match_opening_curly_bracket)
+	if !err.ok do return
+
+	if_stat.true_block, err = capture_block(tokens, char_index)
+	if !err.ok do return
+
+	if tokens[char_index^ + 1] != Token(Keyword(.Else)) do return
+	char_index^ += 2
+
+	else_if_branch: Maybe(IfStatement)
+	else_if_branch, err = try_match_if_statement(tokens, char_index)
+	if !err.ok do return
+
+	if found_else_if, ok := else_if_branch.?; ok {
+		if_stat.else_branch = new(IfStatement)
+		elif_branch := if_stat.else_branch.(^IfStatement)
+		elif_branch.condition = found_else_if.condition
+		elif_branch.true_block = found_else_if.true_block
+		elif_branch.else_branch = found_else_if.else_branch
+	} else {
+		if_stat.else_branch, err = capture_block(tokens, char_index)
+		if !err.ok do return
+	}
+
+	return
+}

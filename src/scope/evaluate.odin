@@ -34,6 +34,9 @@ evaluate_block_with_scope :: proc(block: p.Block, scope: ^Scope) -> (err := Scop
 		case Forever:
 			err = evaluate_block_with_scope(instruction.(Forever).block, scope)
 			if !err.ok do return
+		case IfStatement:
+			err = evaluate_if_statement_with_scope(instruction.(p.IfStatement), scope)
+			if !err.ok do return
 		case Expression:
 			err = evaluate_expression_with_scope(instruction.(Expression), scope)
 			if !err.ok do return
@@ -45,14 +48,33 @@ evaluate_block_with_scope :: proc(block: p.Block, scope: ^Scope) -> (err := Scop
 	return
 }
 
-// Make sure the expression's elements are only accessing values they have access to
+// Make sure an if statement is only accessing values it has access to
 @(private = "file")
-evaluate_expression_with_scope :: proc(
-	expr: p.Expression,
+evaluate_if_statement_with_scope :: proc(
+	if_statement: p.IfStatement,
 	scope: ^Scope,
 ) -> (
 	err := ScopeError{ok = true},
 ) {
+	err = evaluate_expression_with_scope(if_statement.condition, scope)
+	if !err.ok do return
+
+	err = evaluate_block_with_scope(if_statement.true_block, scope)
+	if !err.ok do return
+
+	switch _ in if_statement.else_branch {
+	case ^p.IfStatement:
+		return evaluate_if_statement_with_scope(if_statement.else_branch.(^p.IfStatement)^, scope)
+	case p.Block:
+		return evaluate_block_with_scope(if_statement.else_branch.(p.Block), scope)
+	case:
+		return
+	}
+}
+
+// Make sure the expression's elements are only accessing values they have access to
+@(private = "file")
+evaluate_expression_with_scope :: proc(expr: p.Expression, scope: ^Scope) -> (err := ScopeError{ok = true}) {
 	switch _ in expr {
 	case p.FunctionCall:
 		func_call := expr.(p.FunctionCall)
@@ -65,7 +87,7 @@ evaluate_expression_with_scope :: proc(
 			if !err.ok do return
 		}
 
-		// TODO: evaluate that expressions fit func args
+	// TODO: evaluate that expressions fit func args
 
 	case p.Operation:
 		op := expr.(p.Operation)

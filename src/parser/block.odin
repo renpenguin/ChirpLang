@@ -36,6 +36,8 @@ destroy_block :: proc(block: Block) {
 
 		case Forever:
 			destroy_block(instruction.(Forever).block)
+		case IfStatement:
+			destroy_if_statement(instruction.(IfStatement))
 
 		case Expression:
 			destroy_expression(instruction.(Expression))
@@ -46,6 +48,21 @@ destroy_block :: proc(block: Block) {
 
 	}
 	delete(block)
+}
+
+// Destroys the contents of an `IfStatement`. Pointers in the `else_branch` proprerty are expected to be freeable
+destroy_if_statement :: proc(if_stat: IfStatement) {
+	destroy_expression(if_stat.condition)
+	destroy_block(if_stat.true_block)
+	switch _ in if_stat.else_branch {
+	case ^IfStatement:
+		else_if := if_stat.else_branch.(^IfStatement)
+		destroy_if_statement(else_if^)
+		free(else_if)
+
+	case Block:
+		destroy_block(if_stat.else_branch.(Block))
+	}
 }
 
 // Destroys the contents of an `Expression`. Do not expect this procedure to free the expression itself
