@@ -57,7 +57,6 @@ run :: proc(input: string) {
 	}
 
 	// TODO: if there is nothing aside from imports, functions and constants in the loaded block, set the main function as the primary block
-
 	return_val, err := execute.execute_block(block, block_scope)
 	if !execute.is_runtime_error_ok(err) {
 		fmt.eprint("Runtime error: ")
@@ -71,9 +70,9 @@ run :: proc(input: string) {
 		}
 		os.exit(1)
 	}
-	if _, ok := return_val.(parser.NoneType); !ok {
+	if return_val.handle_by != .DontHandle {
 		fmt.eprintln(
-			"Runtime error: return statement should only be used in a function, found",
+			"Runtime error: return/break statement should not be used at file scope, found",
 			return_val,
 		) // TODO: do this (and same for forever) in `scope.evaluate`
 		os.exit(1)

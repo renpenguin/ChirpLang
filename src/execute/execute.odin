@@ -5,11 +5,25 @@ import s "../scope"
 import t "../tokeniser"
 import "core:fmt"
 
+ReturnHandler :: enum {
+	DontHandle, // Parent scope can deal with this || no return value
+	Loop, // Handle break and continue
+	Function, // Handle return
+}
+ReturnState :: struct {
+	handle_by: ReturnHandler,
+	contents: union {
+		enum {Break, Continue}, // For .Loop
+		p.Value, // For .Function
+	}
+}
+NoReturn :: ReturnState{}
+
 execute_block :: proc(
 	block: p.Block,
 	scope: ^s.Scope,
 ) -> (
-	return_val: p.Value = p.None,
+	returned := NoReturn,
 	err: RuntimeError = NoErrorUnit,
 ) {
 	using p
@@ -40,15 +54,20 @@ execute_block :: proc(
 				defer s.destroy_scope(forever_scope)
 				forever_scope.parent_scope = scope
 
-				_, err = execute_block(forever_block, forever_scope)
-				if !is_runtime_error_ok(err) do return p.None, err
+				returned, err = execute_block(forever_block, forever_scope)
+				if !is_runtime_error_ok(err) do return NoReturn, err
+				switch returned.handle_by {
+					case .DontHandle: break
+					case .Loop: if returned.contents == .Break do break
+					case .Function: return
+				}
 			}
 		case Expression:
 			_, err = execute_expression(instruction.(Expression), scope)
-			if !is_runtime_error_ok(err) do return p.None, err
+			if !is_runtime_error_ok(err) do return NoReturn, err
 		case p.Return:
-			return_val, err = execute_expression(Expression(instruction.(Return)), scope)
-			if !is_runtime_error_ok(err) do return p.None, err
+			returned.handle_by = .Function
+			returned.contents, err = execute_expression(Expression(instruction.(Return)), scope)
 			return
 
 		case ImportStatement, FunctionDefinition:
@@ -143,8 +162,14 @@ call_function :: proc(
 			append(&func_scope.constants, s.Variable{def_arg.name, passed_arg, false})
 		}
 
-		return_val, err = execute_block(interp_func_def.block, func_scope)
+		returned: ReturnState
+		returned, err = execute_block(interp_func_def.block, func_scope)
 		if !is_runtime_error_ok(err) do return
+		switch returned.handle_by {
+			case .DontHandle: break
+			case .Loop: return p.None, TypeError{msg="Break attempted outside loop scope"} // TODO: do this in evaluation stage
+			case .Function: return_val = returned.contents.(p.Value)
+		}
 
 		// Handle return values
 		if p.get_value_type(return_val) != interp_func_def.return_type {
