@@ -37,7 +37,7 @@ build_scope :: proc(
 	scope = new(Scope)
 	scope.parent_scope = parent_module
 
-	for instruction, i in block {
+	for instruction in block {
 		if import_statement, ok := instruction.(p.ImportStatement); ok {
 			for name_ref in import_statement {
 				module, ok := l.try_access_library(name_ref)
@@ -62,7 +62,25 @@ build_scope :: proc(
 		// Evaluate constants (for math:constants:pi)
 	}
 
-	return scope, evaluate_block_with_scope(block^, scope)
+	err = evaluate_block_with_scope(block^, scope)
+	if !err.ok do return
+
+	for func in scope.functions {
+		if interp_func, ok := func.(d.InterpretedFunction); ok {
+			func_scope := new(Scope)
+			defer destroy_scope(func_scope)
+			func_scope.parent_scope = interp_func.parent_scope
+
+			for arg in interp_func.args { // TODO: check arg types/count against passed args
+				append(&func_scope.constants, Variable{arg.name, p.None, false})
+			}
+
+			err = evaluate_block_with_scope(interp_func.block, func_scope)
+			if !err.ok do return
+		}
+	}
+
+	return
 }
 
 // Recursively destroy everything stored in the scope

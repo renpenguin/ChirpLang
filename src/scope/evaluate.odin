@@ -65,20 +65,7 @@ evaluate_expression_with_scope :: proc(
 			if !err.ok do return
 		}
 
-		found: ScopeItem
-		found, _ = search_for_reference(scope, func_call.name)
-
-		if interp_func, ok := found.(Function).(InterpretedFunction); ok {
-			func_scope := new(Scope)
-			defer destroy_scope(func_scope)
-			func_scope.parent_scope = interp_func.parent_scope
-
-			for arg in interp_func.args { // TODO: check arg types/count against passed args
-				append(&func_scope.constants, Variable{arg.name, p.None, false})
-			}
-
-			err = evaluate_block_with_scope(interp_func.block, func_scope)
-		}
+		// TODO: evaluate that expressions fit func args
 
 	case p.Operation:
 		op := expr.(p.Operation)
