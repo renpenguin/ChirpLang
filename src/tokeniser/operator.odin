@@ -66,3 +66,15 @@ try_match_to_assignable_operator :: proc(
 
 	return
 }
+
+// Return an `and` or `or` operator if the custom keyword matches it
+@(private)
+try_match_keyword_to_and_or :: proc(keyword: Keyword) -> (literal: Maybe(Operator)) {
+	switch keyword {
+	case CustomKeyword("and"): literal = .And
+	case CustomKeyword("or"): literal = .Or
+	case: return nil
+	}
+	delete(string(keyword.(CustomKeyword)))
+	return
+}

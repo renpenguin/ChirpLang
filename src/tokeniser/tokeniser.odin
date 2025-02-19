@@ -89,9 +89,14 @@ tokenise_next_char :: proc(
 	// Keywords
 	if keyword, ok := try_parse_keyword(input_chars, char_index); ok {
 		// Attempt to map the keyword onto `true` or `false`
-		bool_literal, ok := try_match_keyword_to_bool_literal(keyword).?
-		if ok do append(tokens, bool_literal)
-		else do append(tokens, keyword)
+		bool_literal, bool_ok := try_match_keyword_to_bool_literal(keyword).?
+		if bool_ok {append(tokens, bool_literal); return}
+
+		// Attempt to map the keyword onto `and` or `or`
+		cond_literal, cond_ok := try_match_keyword_to_and_or(keyword).?
+		if cond_ok {append(tokens, cond_literal); return}
+
+		append(tokens, keyword)
 		return
 	}
 
