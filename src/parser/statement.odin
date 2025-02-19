@@ -8,6 +8,10 @@ Forever :: struct {
 }
 
 Return :: distinct Expression
+LoopControl :: enum {
+	Break,
+	Continue,
+}
 
 Statement :: union {
 	ImportStatement,
@@ -18,6 +22,7 @@ Statement :: union {
 	Forever,
 	Expression,
 	Return,
+	LoopControl
 }
 
 // Captures a block of statements surrounded by {}. `token_index` should be the index of the first {

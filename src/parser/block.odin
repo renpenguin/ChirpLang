@@ -44,6 +44,7 @@ destroy_block :: proc(block: Block) {
 
 		case Return:
 			destroy_expression(Expression(instruction.(Return)))
+		case LoopControl: break
 		}
 
 	}

@@ -9,7 +9,7 @@ evaluate_block_with_scope :: proc(block: p.Block, scope: ^Scope) -> (err := Scop
 
 	for instruction in block {
 		switch _ in instruction {
-		case ImportStatement, FunctionDefinition:
+		case ImportStatement, FunctionDefinition, LoopControl:
 			// Ignore this
 			break
 		case VariableDefinition:

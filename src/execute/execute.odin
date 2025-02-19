@@ -13,7 +13,7 @@ ReturnHandler :: enum {
 ReturnState :: struct {
 	handle_by: ReturnHandler,
 	contents: union {
-		enum {Break, Continue}, // For .Loop
+		p.LoopControl, // For .Loop
 		p.Value, // For .Function
 	}
 }
@@ -56,11 +56,10 @@ execute_block :: proc(
 
 				returned, err = execute_block(forever_block, forever_scope)
 				if !is_runtime_error_ok(err) do return NoReturn, err
-				switch returned.handle_by {
-					case .DontHandle: break
-					case .Loop: if returned.contents == .Break do break
-					case .Function: return
-				}
+				if returned.handle_by == .Function do return
+				is_break := returned.contents == .Break
+				returned = NoReturn
+				if is_break do break
 			}
 		case IfStatement:
 			returned, err = execute_if_statement(instruction.(p.IfStatement), scope)
@@ -69,9 +68,13 @@ execute_block :: proc(
 		case Expression:
 			_, err = execute_expression(instruction.(Expression), scope)
 			if !is_runtime_error_ok(err) do return NoReturn, err
-		case p.Return:
+		case Return:
 			returned.handle_by = .Function
 			returned.contents, err = execute_expression(Expression(instruction.(Return)), scope)
+			return
+		case LoopControl:
+			returned.handle_by = .Loop
+			returned.contents = instruction.(LoopControl)
 			return
 
 		case ImportStatement, FunctionDefinition:

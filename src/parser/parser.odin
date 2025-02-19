@@ -79,6 +79,10 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err := SyntaxError
 			continue
 		}
 
+		// Break, continue
+		if tokens[i] == Token(Keyword(.Break)) {append(&instructions, LoopControl.Break);continue}
+		if tokens[i] == Token(Keyword(.Continue)) {append(&instructions, LoopControl.Continue);continue}
+
 		// Expression (catch-all for anything we may have missed)
 		expr: Expression
 		expr, err = capture_expression(tokens, &i)
