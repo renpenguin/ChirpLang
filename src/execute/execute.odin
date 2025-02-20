@@ -5,6 +5,8 @@ import s "../scope"
 import t "../tokeniser"
 import "core:fmt"
 
+STACK_LIMIT :: 500
+
 ReturnHandler :: enum {
 	DontHandle, // Parent scope can deal with this || no return value
 	Loop, // Handle break and continue
@@ -174,6 +176,9 @@ execute_expression :: proc(
 	return
 }
 
+@(private="file")
+stack := 0
+
 call_function :: proc(
 	func_call: p.FunctionCall,
 	scope: ^s.Scope,
@@ -217,8 +222,14 @@ call_function :: proc(
 			append(&func_scope.constants, s.Variable{def_arg.name, passed_arg, false})
 		}
 
+		stack += 1
+		if stack > STACK_LIMIT {
+			return p.None, StackOverflow(interp_func_def.name)
+		}
+
 		returned: ReturnState
 		returned, err = execute_block(interp_func_def.block, func_scope)
+		stack -= 1
 		if !is_runtime_error_ok(err) do return
 		switch returned.handle_by {
 		case .DontHandle: break
