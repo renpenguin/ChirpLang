@@ -17,7 +17,7 @@ ReturnState :: struct {
 	handle_by: ReturnHandler,
 	contents:  union {
 		p.LoopControl, // For .Loop
-		p.Value, // For .Function
+		RTValue, // For .Function
 	},
 }
 NoReturn :: ReturnState{}
@@ -28,7 +28,7 @@ execute_block :: proc(block: p.Block, scope: ^s.Scope) -> (returned := NoReturn,
 	iter_instructions: for instruction in block {
 		switch inst in instruction {
 		case VariableDefinition:
-			contents: p.Value
+			contents: RTValue
 			contents, err = execute_expression(inst.expr, scope)
 			if !is_runtime_error_ok(err) do return
 
@@ -79,6 +79,9 @@ execute_block :: proc(block: p.Block, scope: ^s.Scope) -> (returned := NoReturn,
 		}
 	}
 
+	// Values will be freed at the end of the scope
+	for var in scope.constants do free_value(var.contents)
+
 	return
 }
 
@@ -90,12 +93,13 @@ evaluate_condition_expression :: proc(
 	result: bool,
 	err: RuntimeError = NoErrorUnit,
 ) {
-	condition_value: p.Value
+	condition_value: RTValue
 	condition_value, err = execute_expression(expr, scope)
+	defer free_value(condition_value)
 	if !is_runtime_error_ok(err) do return
 
 	is_bool: bool
-	result, is_bool = condition_value.(bool)
+	result, is_bool = get_value(condition_value).(bool)
 	return
 }
 
@@ -138,7 +142,7 @@ execute_expression :: proc(
 	expression: p.Expression,
 	scope: ^s.Scope,
 ) -> (
-	value: p.Value = p.None,
+	value := RTNone,
 	err: RuntimeError = NoErrorUnit,
 ) {
 	using p
@@ -147,7 +151,7 @@ execute_expression :: proc(
 	case FunctionCall:
 		return call_function(expr, scope)
 	case Operation:
-		value1, value2: Value
+		value1, value2: RTValue
 		value1, err = execute_expression(expr.left^, scope)
 		if !is_runtime_error_ok(err) do return
 		value2, err = execute_expression(expr.right^, scope)
@@ -159,16 +163,16 @@ execute_expression :: proc(
 		defer strings.builder_destroy(&sb)
 
 		for arg in expr {
-			value: p.Value
+			value: RTValue
 			value, err = execute_expression(arg, scope)
 			fmt.sbprint(&sb, value)
 		}
-		value = strings.clone(strings.to_string(sb)) // TODO: Reference counting of runtime values
+		value = new_rc(strings.clone(strings.to_string(sb))) // TODO: Reference counting of runtime values
 	case Value:
 		value = expr
 	case NameReference:
 		variable, _ := s.search_for_reference(scope, expr)
-		value = variable.(^s.Variable).contents
+		value = inc_rc(variable.(^s.Variable).contents)
 	}
 
 	return
@@ -181,44 +185,49 @@ call_function :: proc(
 	func_call: p.FunctionCall,
 	scope: ^s.Scope,
 ) -> (
-	return_val: p.Value = p.None,
+	return_val := RTNone,
 	err: RuntimeError,
 ) {
 	item, _ := s.search_for_reference(scope, func_call.name)
 
 	switch func in item.(s.Function) {
 	case s.BuiltInFunction:
+		rc_values: [dynamic]RTValue
+		defer delete(rc_values)
 		values: [dynamic]p.Value
 		defer delete(values)
 
 		for expr in func_call.args {
-			arg: p.Value
+			arg: RTValue
 			arg, err = execute_expression(expr, scope)
 			if !is_runtime_error_ok(err) do return
-			append(&values, arg)
+			append(&rc_values, arg)
+			append(&values, get_value(arg))
 		}
 
 		return_val, err = func.func_ref(values)
 		(&err.(s.FunctionError)).func_name = func_call.name
+
+		for value in rc_values do free_value(value)
 
 	case s.InterpretedFunction:
 		func_scope := new(s.Scope)
 		defer s.destroy_scope(func_scope)
 		func_scope.parent_scope = func.parent_scope
 
-		if len(func.args) != len(func_call.args) do return p.None, s.FunctionError{msg = "Incorrect number of arguments passed to function call", func_name = func_call.name}
+		if len(func.args) != len(func_call.args) do return RTNone, s.FunctionError{msg = "Incorrect number of arguments passed to function call", func_name = func_call.name}
 		for def_arg, i in func.args {
-			passed_arg: p.Value
+			passed_arg: RTValue
 			passed_arg, err = execute_expression(func_call.args[i], scope)
 			if !is_runtime_error_ok(err) do return
-			if def_arg.type != p.get_value_type(passed_arg) do return p.None, TypeError{msg = "Incorrect function argument type", value1 = def_arg.type, value2 = p.get_value_type(passed_arg)}
+			if def_arg.type != get_value_type(passed_arg) do return RTNone, TypeError{msg = "Incorrect function argument type", value1 = def_arg.type, value2 = get_value_type(passed_arg)}
 
 			append(&func_scope.constants, s.Variable{def_arg.name, passed_arg, false})
 		}
 
 		stack += 1
 		if stack > STACK_LIMIT {
-			return p.None, StackOverflow(func.name)
+			return RTNone, StackOverflow(func.name)
 		}
 
 		returned: ReturnState
@@ -228,15 +237,15 @@ call_function :: proc(
 		switch returned.handle_by {
 		case .DontHandle: break
 		// TODO: do this in evaluation stage
-		case .Loop: return p.None, TypeError{msg = "Break attempted outside loop scope"}
-		case .Function: return_val = returned.contents.(p.Value)
+		case .Loop: return RTNone, TypeError{msg = "Break attempted outside loop scope"}
+		case .Function: return_val = returned.contents.(RTValue)
 		}
 
 		// Handle return values
-		if p.get_value_type(return_val) != func.return_type {
+		if get_value_type(return_val) != func.return_type {
 			err = TypeError {
 				msg    = "Function return value does not match return type",
-				value1 = p.get_value_type(return_val),
+				value1 = get_value_type(return_val),
 				value2 = func.return_type,
 			}
 		}

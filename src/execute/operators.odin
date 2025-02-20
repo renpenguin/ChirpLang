@@ -9,28 +9,30 @@ assign_operation :: proc(assignment: p.VariableAssignment, scope: ^s.Scope) -> (
 	scope_item, _ := s.search_for_reference(scope, assignment.target)
 	variable := scope_item.(^s.Variable)
 
-	expr_result, new_val: p.Value
+	expr_result, new_val: RTValue
 
-	operator: t.ArithmeticOperator
-	switch assignment.operator {
-	case .AddAssign: operator = .Add
-	case .SubAssign: operator = .Sub
-	case .MulAssign: operator = .Mul
-	case .DivAssign: operator = .Div
-	case .Assign:
+	if assignment.operator == .Assign {
 		new_val, err = execute_expression(assignment.expr, scope)
 		if !is_runtime_error_ok(err) do return err
-		// TODO: type checking
-		variable.contents = new_val
-		return
+	} else {
+		operator: t.ArithmeticOperator
+		switch assignment.operator {
+		case .AddAssign: operator = .Add
+		case .SubAssign: operator = .Sub
+		case .MulAssign: operator = .Mul
+		case .DivAssign: operator = .Div
+		case .Assign: break
+		}
+
+		expr_result, err = execute_expression(assignment.expr, scope)
+		if !is_runtime_error_ok(err) do return err
+
+		new_val, err = process_operation(variable.contents, expr_result, operator)
+		if !is_runtime_error_ok(err) do return err
 	}
 
-	expr_result, err = execute_expression(assignment.expr, scope)
-	if !is_runtime_error_ok(err) do return err
-
-	new_val, err = process_operation(variable.contents, expr_result, operator)
-	if !is_runtime_error_ok(err) do return err
 	// TODO: type checking
+	free_value(variable.contents)
 	variable.contents = new_val
 
 	return
@@ -38,14 +40,15 @@ assign_operation :: proc(assignment: p.VariableAssignment, scope: ^s.Scope) -> (
 
 @(private)
 process_operation :: proc(
-	value1, value2: p.Value,
+	value1, value2: RTValue,
 	operator: t.ArithmeticOperator,
 ) -> (
-	output: p.Value,
+	output: RTValue,
 	err := TypeError{ok = true},
 ) {
 	value1, value2, ok := match_types(value1, value2)
-	if !ok do return p.None, TypeError {
+	// free_value(value1, value2)
+	if !ok do return RTNone, TypeError {
 		msg = "Could not match value types",
 		value1 = p.get_value_type(value1),
 		value2 = p.get_value_type(value2)
@@ -56,59 +59,65 @@ process_operation :: proc(
 		first := value1.(int)
 		second := value2.(int)
 
+		out: p.Value
 		#partial switch operator {
-		case .Add: 			return first + second, err
-		case .Sub: 			return first - second, err
-		case .Mul: 			return first * second, err
-		case .Div: 			return first / second, err
-		case .NotEqual: 	return first != second, err
-		case .IsEqual: 		return first == second, err
-		case .GreaterThan: 	return first > second, err
-		case .GreaterEqual: return first >= second, err
-		case .LessThan: 	return first < second, err
-		case .LessEqual: 	return first <= second, err
-		case: return p.None, TypeError{msg = "Operation cannot be performed on int values", op = operator}
+		case .Add: 			out = first + second
+		case .Sub: 			out = first - second
+		case .Mul: 			out = first * second
+		case .Div: 			out = first / second
+		case .NotEqual: 	out = first != second
+		case .IsEqual: 		out = first == second
+		case .GreaterThan: 	out = first > second
+		case .GreaterEqual: out = first >= second
+		case .LessThan: 	out = first < second
+		case .LessEqual: 	out = first <= second
+		case: err = TypeError{msg = "Operation cannot be performed on int values", op = operator}
 		}
+		return RTValue(out), err
 	case .Float:
 		first := value1.(t.float)
 		second := value2.(t.float)
 
+		out: p.Value
 		#partial switch operator {
-		case .Add: 			return first + second, err
-		case .Sub: 			return first - second, err
-		case .Mul: 			return first * second, err
-		case .Div: 			return first / second, err
-		case .NotEqual: 	return first != second, err
-		case .IsEqual: 		return first == second, err
-		case .GreaterThan: 	return first > second, err
-		case .GreaterEqual: return first >= second, err
-		case .LessThan: 	return first < second, err
-		case .LessEqual: 	return first <= second, err
-		case: return p.None, TypeError{msg = "Operation cannot be performed on float values", op = operator}
+		case .Add: 			out = first + second
+		case .Sub: 			out = first - second
+		case .Mul: 			out = first * second
+		case .Div: 			out = first / second
+		case .NotEqual: 	out = first != second
+		case .IsEqual: 		out = first == second
+		case .GreaterThan: 	out = first > second
+		case .GreaterEqual: out = first >= second
+		case .LessThan: 	out = first < second
+		case .LessEqual: 	out = first <= second
+		case: err = TypeError{msg = "Operation cannot be performed on float values", op = operator}
 		}
+		return RTValue(out), err
 	case .Bool:
 		first := value1.(bool)
 		second := value2.(bool)
 
+		out: p.Value
 		#partial switch operator {
-		case .And: 		return first && second, err
-		case .Or: 		return first || second, err
-		case .NotEqual: return first != second, err
-		case .IsEqual: 	return first == second, err
-		case: return p.None, TypeError{msg = "Operation cannot be performed on bool values", op = operator}
+		case .And: 		out = first && second
+		case .Or: 		out = first || second
+		case .NotEqual: out = first != second
+		case .IsEqual: 	out = first == second
+		case: err = TypeError{msg = "Operation cannot be performed on bool values", op = operator}
 		}
+		return RTValue(out), err
 	case .String, .None:
 		break
 	}
 
-	return p.None, TypeError{msg = "Operation unavailable for values"}
+	return RTNone, TypeError{msg = "Operation unavailable for values"}
 }
 
 @(private)
-match_types :: proc(value1, value2: p.Value) -> (matched_value1, matched_value2: p.Value, ok: bool) {
-	value1, value2 := value1, value2
-	type1 := p.get_value_type(value1)
-	type2 := p.get_value_type(value2)
+match_types :: proc(value1, value2: RTValue) -> (matched_value1, matched_value2: p.Value, ok: bool) {
+	value1, value2 := get_value(value1), get_value(value2)
+	type1 := get_value_type(value1)
+	type2 := get_value_type(value2)
 
 	matching_types := type1 == type2
 	if !matching_types {

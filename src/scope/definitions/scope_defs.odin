@@ -1,5 +1,6 @@
 package scope_defs
 
+import e "../../execute/definitions"
 import p "../../parser"
 
 Scope :: struct {
@@ -17,6 +18,6 @@ Module :: struct {
 Variable :: struct {
 	name:     p.NameDefinition,
 	// Variable can be of type int, float, string or bool
-	contents: p.Value,
+	contents: e.RTValue,
 	mutable:  bool,
 }

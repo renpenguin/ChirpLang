@@ -3,15 +3,15 @@ package parser
 import t "../tokeniser"
 
 NoneType :: struct {}
-None :: NoneType{}
+None: Value : NoneType{}
 
 ValueType :: t.TypeKeyword
 Value :: union #no_nil {
+	NoneType,
 	int,
 	t.float,
 	string,
 	bool,
-	NoneType,
 }
 
 literal_to_value :: proc(literal: t.Literal) -> Value {
@@ -26,11 +26,11 @@ literal_to_value :: proc(literal: t.Literal) -> Value {
 
 get_value_type :: proc(value: Value) -> ValueType {
 	switch _ in value {
+	case NoneType: return .None
 	case int:      return .Int
 	case t.float:  return .Float
 	case string:   return .String
 	case bool:     return .Bool
-	case NoneType: return .None
 	case:          panic("Unreachable")
 	}
 }
