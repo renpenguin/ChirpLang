@@ -13,28 +13,26 @@ display_block :: proc(block: p.Block, indent := 0, ignore_scope_statements := fa
 			fmt.print("  ")
 		}
 
-		#partial switch _ in instruction {
+		#partial switch inst in instruction {
 		case ImportStatement:
 			if ignore_scope_statements do continue
 			fmt.print("[Import]")
-			for lib in instruction.(ImportStatement) {
+			for lib in inst {
 				fmt.printf(" [%v]", name_ref_to_string(lib))
 			}
 			fmt.println()
 		case FunctionDefinition:
 			if ignore_scope_statements do continue
-			func_def := instruction.(FunctionDefinition)
-			fmt.println("[FuncDef] ", func_def.name, func_def.args, ": ", sep = "")
-			display_block(func_def.block, indent + 1)
+			fmt.println("[FuncDef] ", inst.name, inst.args, ": ", sep = "")
+			display_block(inst.block, indent + 1)
 		case While:
 			fmt.print("[While] ")
-			display_expression(instruction.(p.While).condition)
+			display_expression(inst.condition)
 			fmt.println(":")
-			display_block(instruction.(While).block, indent + 1)
+			display_block(inst.block, indent + 1)
 		case VariableDefinition:
-			var_def := instruction.(VariableDefinition)
-			fmt.print("[VarDef]", var_def.name, "[=] ")
-			display_expression(var_def.expr)
+			fmt.print("[VarDef]", inst.name, "[=] ")
+			display_expression(inst.expr)
 			fmt.println()
 		case VariableAssignment:
 			var_ass := instruction.(VariableAssignment)
@@ -52,44 +50,42 @@ display_block :: proc(block: p.Block, indent := 0, ignore_scope_statements := fa
 
 // Prints a `p.Expresion` to `stdout` in a human-readable pseudo language
 @(private)
-display_expression :: proc(expr: p.Expression) {
+display_expression :: proc(expression: p.Expression) {
 	using p
 
-	#partial switch _ in expr {
+	switch expr in expression {
 	case Operation:
-		op := expr.(Operation)
 		fmt.print("Operation{ ")
-		display_expression(op.left^)
-		fmt.print(" [", op.op, "] ", sep = "")
-		display_expression(op.right^)
+		display_expression(expr.left^)
+		fmt.print(" [", expr.op, "] ", sep = "")
+		display_expression(expr.right^)
 		fmt.print(" }")
 
 	case FunctionCall:
-		func_call := expr.(FunctionCall)
-		fmt.print("FunctionCall{", name_ref_to_string(func_call.name))
+		fmt.print("FunctionCall{", name_ref_to_string(expr.name))
 
-		if len(func_call.args) > 0 {
+		if len(expr.args) > 0 {
 			fmt.print(", ")
-			for arg in func_call.args[:len(func_call.args) - 1] {
+			for arg in expr.args[:len(expr.args) - 1] {
 				display_expression(arg)
 				fmt.print(", ")
 			}
-			display_expression(func_call.args[len(func_call.args) - 1])
+			display_expression(expr.args[len(expr.args) - 1])
 		}
 		fmt.print(" }")
 
 	case FormatString:
 		fmt.print("Format{ ")
-		for arg in expr.(p.FormatString) {
+		for arg in expr {
 			display_expression(arg)
 			fmt.print(", ")
 		}
 		fmt.print("\b\b }")
 
 	case NameReference:
-		fmt.print(name_ref_to_string(expr.(p.NameReference)))
+		fmt.print(name_ref_to_string(expr))
 
-	case:
+	case p.Value:
 		fmt.print(expr)
 	}
 }

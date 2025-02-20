@@ -15,34 +15,23 @@ Value :: union #no_nil {
 }
 
 literal_to_value :: proc(literal: t.Literal) -> Value {
-	switch _ in literal {
-	case int:
-		return Value(literal.(int))
-	case t.float:
-		return Value(literal.(t.float))
-	case string:
-		return Value(literal.(string))
-	case bool:
-		return Value(literal.(bool))
-	case:
-		panic("Unreachable")
+	switch l in literal {
+	case int:     return Value(l)
+	case t.float: return Value(l)
+	case string:  return Value(l)
+	case bool:    return Value(l)
+	case: panic("Unreachable")
 	}
 }
 
 get_value_type :: proc(value: Value) -> ValueType {
 	switch _ in value {
-	case int:
-		return .Int
-	case t.float:
-		return .Float
-	case string:
-		return .String
-	case bool:
-		return .Bool
-	case NoneType:
-		return .None
-	case:
-		panic("Unreachable")
+	case int:      return .Int
+	case t.float:  return .Float
+	case string:   return .String
+	case bool:     return .Bool
+	case NoneType: return .None
+	case:          panic("Unreachable")
 	}
 }
 

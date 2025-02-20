@@ -8,43 +8,39 @@ Block :: distinct [dynamic]Statement
 // Recursively destroy everything stored in the block
 destroy_block :: proc(block: Block) {
 	for instruction in block {
-		switch _ in instruction {
+		switch inst in instruction {
 		case ImportStatement:
-			import_statement := instruction.(ImportStatement)
-			for library in import_statement {
+			for library in inst {
 				destroy_name_ref(library)
 			}
-			delete(import_statement)
+			delete(inst)
 
 		case VariableDefinition:
-			var_def := instruction.(VariableDefinition)
-			delete(string(var_def.name))
-			destroy_expression(var_def.expr)
+			delete(string(inst.name))
+			destroy_expression(inst.expr)
 		case VariableAssignment:
-			var_ass := instruction.(VariableAssignment)
-			destroy_name_ref(var_ass.target)
-			destroy_expression(var_ass.expr)
+			destroy_name_ref(inst.target)
+			destroy_expression(inst.expr)
 
 		case FunctionDefinition:
-			func_def := instruction.(FunctionDefinition)
-			delete(string(func_def.name))
-			for arg in func_def.args {
+			delete(string(inst.name))
+			for arg in inst.args {
 				delete(string(arg.name))
 			}
-			delete(func_def.args)
-			destroy_block(func_def.block)
+			delete(inst.args)
+			destroy_block(inst.block)
 
 		case While:
-			destroy_expression(instruction.(While).condition)
-			destroy_block(instruction.(While).block)
+			destroy_expression(inst.condition)
+			destroy_block(inst.block)
 		case IfStatement:
-			destroy_if_statement(instruction.(IfStatement))
+			destroy_if_statement(inst)
 
 		case Expression:
-			destroy_expression(instruction.(Expression))
+			destroy_expression(inst)
 
 		case Return:
-			destroy_expression(Expression(instruction.(Return)))
+			destroy_expression(Expression(inst))
 		case LoopControl:
 			break
 		}
@@ -57,42 +53,38 @@ destroy_block :: proc(block: Block) {
 destroy_if_statement :: proc(if_stat: IfStatement) {
 	destroy_expression(if_stat.condition)
 	destroy_block(if_stat.true_block)
-	switch _ in if_stat.else_branch {
+	switch branch in if_stat.else_branch {
 	case ^IfStatement:
-		else_if := if_stat.else_branch.(^IfStatement)
-		destroy_if_statement(else_if^)
-		free(else_if)
+		destroy_if_statement(branch^)
+		free(branch)
 
 	case Block:
-		destroy_block(if_stat.else_branch.(Block))
+		destroy_block(branch)
 	}
 }
 
 // Destroys the contents of an `Expression`. Do not expect this procedure to free the expression itself
-destroy_expression :: proc(expr: Expression) {
+destroy_expression :: proc(expression: Expression) {
 	using t
 
-	switch _ in expr {
+	switch expr in expression {
 	case FunctionCall:
-		func_call := expr.(FunctionCall)
-		destroy_name_ref(func_call.name)
-		for arg in func_call.args {
+		destroy_name_ref(expr.name)
+		for arg in expr.args {
 			destroy_expression(arg)
 		}
-		delete(func_call.args)
+		delete(expr.args)
 	case Operation:
-		operation := expr.(Operation)
-		destroy_expression(operation.left^)
-		destroy_expression(operation.right^)
-		free(operation.left)
-		free(operation.right)
+		destroy_expression(expr.left^)
+		destroy_expression(expr.right^)
+		free(expr.left)
+		free(expr.right)
 	case FormatString:
-		fmt_str := expr.(FormatString)
-		for arg in fmt_str do destroy_expression(arg)
-		delete(fmt_str)
+		for arg in expr do destroy_expression(arg)
+		delete(expr)
 	case Value:
-		if str_value, ok := expr.(Value).(string); ok do delete(str_value)
+		if str_value, ok := expr.(string); ok do delete(str_value)
 	case NameReference:
-		destroy_name_ref(expr.(NameReference))
+		destroy_name_ref(expr)
 	}
 }

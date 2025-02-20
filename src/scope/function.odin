@@ -14,13 +14,10 @@ BuiltInFunction :: d.BuiltInFunction
 Function :: d.Function
 
 // Gets the function name, regardless of the union type
-get_function_name :: proc(func: Function) -> p.NameDefinition {
-	switch _ in func {
-	case InterpretedFunction:
-		return func.(InterpretedFunction).name
-	case BuiltInFunction:
-		return func.(BuiltInFunction).name
-	case:
-		panic("Unreachable")
+get_function_name :: proc(function: Function) -> p.NameDefinition {
+	switch func in function {
+	case InterpretedFunction: return func.name
+	case BuiltInFunction:     return func.name
+	case:                     panic("Unreachable")
 	}
 }

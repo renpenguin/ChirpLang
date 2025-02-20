@@ -26,13 +26,13 @@ RuntimeError :: union #no_nil {
 }
 
 is_runtime_error_ok :: proc(err: RuntimeError) -> bool {
-	switch _ in err {
+	switch e in err {
 	case TypeError:
-		return err.(TypeError).ok
+		return e.ok
 	case StackOverflow:
-		return err.(StackOverflow) == ""
+		return e == ""
 	case s.FunctionError:
-		return err.(s.FunctionError).ok
+		return e.ok
 	case NoError:
 		return true
 	case:
@@ -45,14 +45,13 @@ display_runtime_error :: proc(err: RuntimeError) -> (is_err: bool) {
 	is_err = !is_runtime_error_ok(err)
 	if is_err {
 		fmt.eprint("Runtime error: ")
-		switch _ in err {
+		switch e in err {
 		case TypeError:
-			type_err := err.(TypeError)
-			fmt.eprintln("Type error -", type_err.msg, type_err.value1, type_err.op, type_err.value2)
+			fmt.eprintln("Type error -", e.msg, e.value1, e.op, e.value2)
 		case StackOverflow:
-			fmt.eprintfln("Stack overflow error calling %s()", err.(StackOverflow))
+			fmt.eprintfln("Stack overflow error calling %s()", e)
 		case s.FunctionError:
-			fmt.eprintfln("Function error when calling %s()... %s", f.name_ref_to_string(err.(s.FunctionError).func_name), err.(s.FunctionError).msg)
+			fmt.eprintfln("Function error when calling %s()... %s", f.name_ref_to_string(e.func_name), e.msg)
 		case NoError:
 			panic("Unreachable")
 		}

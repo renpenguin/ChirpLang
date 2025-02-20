@@ -5,15 +5,13 @@ TokenStream :: distinct [dynamic]Token
 // Fully destroy the TokenStream
 destroy_token_stream :: proc(tokens: TokenStream) {
 	for token in tokens {
-		#partial switch _ in token {
+		#partial switch tok in token {
 		case Keyword:
-			keyword := token.(Keyword)
-			if custom_keyword, ok := keyword.(CustomKeyword); ok {
+			if custom_keyword, ok := tok.(CustomKeyword); ok {
 				delete(string(custom_keyword))
 			}
 		case Literal:
-			literal := token.(Literal)
-			if str_literal, ok := literal.(string); ok {
+			if str_literal, ok := tok.(string); ok {
 				delete(string(str_literal))
 			}
 		}
