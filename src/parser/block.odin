@@ -34,8 +34,9 @@ destroy_block :: proc(block: Block) {
 			delete(func_def.args)
 			destroy_block(func_def.block)
 
-		case Forever:
-			destroy_block(instruction.(Forever).block)
+		case While:
+			destroy_expression(instruction.(While).condition)
+			destroy_block(instruction.(While).block)
 		case IfStatement:
 			destroy_if_statement(instruction.(IfStatement))
 

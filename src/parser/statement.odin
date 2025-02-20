@@ -2,8 +2,9 @@ package parser
 
 import t "../tokeniser"
 
-// Executes a block until `Break` is triggered. Expected patten `forever $block$`
-Forever :: struct {
+// Executes a block until the condition evaluates to false or `Break` is triggered. Expected patten `while $expr$ $block$` or `forever $block$`
+While :: struct {
+	condition: Expression,
 	block: Block,
 }
 
@@ -19,7 +20,7 @@ Statement :: union {
 	VariableAssignment,
 	FunctionDefinition,
 	IfStatement,
-	Forever,
+	While,
 	Expression,
 	Return,
 	LoopControl
@@ -281,7 +282,7 @@ ElseBranch :: union {
 	Block,
 }
 
-@(private = "file")
+@(private)
 match_opening_curly_bracket :: proc(token: t.Token) -> bool {
 	return token == t.Token(t.Bracket{.Curly, .Opening})
 }

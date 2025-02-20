@@ -26,9 +26,10 @@ display_block :: proc(block: p.Block, indent := 0, ignore_scope_statements := fa
 			func_def := instruction.(FunctionDefinition)
 			fmt.println("[FuncDef] ", func_def.name, func_def.args, ": ", sep = "")
 			display_block(func_def.block, indent + 1)
-		case Forever:
-			fmt.println("[Forever]:")
-			display_block(instruction.(Forever).block, indent + 1)
+		case While:
+			fmt.println("[While]:")
+			display_expression(instruction.(p.While).condition)
+			display_block(instruction.(While).block, indent + 1)
 		case VariableDefinition:
 			var_def := instruction.(VariableDefinition)
 			fmt.print("[VarDef]", var_def.name, "[=] ")

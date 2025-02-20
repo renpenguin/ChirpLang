@@ -28,15 +28,22 @@ parse :: proc(tokens: t.TokenStream) -> (instructions: Block, err := SyntaxError
 			continue
 		}
 
-		// Forever
-		if tokens[i] == Token(Keyword(.Forever)) {
-			forever: Forever
-
+		// Forever and While
+		if tokens[i] == Token(Keyword(.While)) || tokens[i] == Token(Keyword(.Forever)) {
+			while: While
 			i += 1
-			forever.block, err = capture_block(tokens, &i)
+
+			if tokens[i - 1] == Token(Keyword(.While)) {
+				while.condition, err = capture_expression(tokens, &i, match_opening_curly_bracket)
+				if !err.ok do return
+			} else {
+				while.condition = Expression(Value(true))
+			}
+
+			while.block, err = capture_block(tokens, &i)
 			if !err.ok do return
 
-			append(&instructions, forever)
+			append(&instructions, while)
 			continue
 		}
 

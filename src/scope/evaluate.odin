@@ -31,8 +31,10 @@ evaluate_block_with_scope :: proc(block: p.Block, scope: ^Scope) -> (err := Scop
 
 			err = evaluate_expression_with_scope(var_ass.expr, scope)
 			if !err.ok do return
-		case Forever:
-			err = evaluate_block_with_scope(instruction.(Forever).block, scope)
+		case While:
+			err = evaluate_expression_with_scope(instruction.(p.While).condition, scope)
+			if !err.ok do return
+			err = evaluate_block_with_scope(instruction.(While).block, scope)
 			if !err.ok do return
 		case IfStatement:
 			err = evaluate_if_statement_with_scope(instruction.(p.IfStatement), scope)

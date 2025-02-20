@@ -47,19 +47,22 @@ execute_block :: proc(
 		case VariableAssignment:
 			err = assign_operation(instruction.(p.VariableAssignment), scope)
 			if !is_runtime_error_ok(err) do return
-		case Forever:
-			forever_block := instruction.(Forever).block
+		case While:
+			while := instruction.(While)
 			for {
-				forever_scope := new(s.Scope)
-				defer s.destroy_scope(forever_scope)
-				forever_scope.parent_scope = scope
+				result: bool
+				result, err = evaluate_condition_expression(while.condition, scope)
+				if !is_runtime_error_ok(err) do return
+				if !result do break
 
-				returned, err = execute_block(forever_block, forever_scope)
-				if !is_runtime_error_ok(err) do return NoReturn, err
-				if returned.handle_by == .Function do return
-				is_break := returned.contents == .Break
-				returned = NoReturn
-				if is_break do break
+				while_scope := new(s.Scope)
+				defer s.destroy_scope(while_scope)
+				while_scope.parent_scope = scope
+
+				while_return, while_err := execute_block(while.block, while_scope)
+				if !is_runtime_error_ok(while_err) do return NoReturn, while_err
+				if returned.handle_by == .Function do return while_return, while_err
+				if while_return.contents == .Break do break
 			}
 		case IfStatement:
 			returned, err = execute_if_statement(instruction.(p.IfStatement), scope)
@@ -85,7 +88,24 @@ execute_block :: proc(
 	return
 }
 
-@private
+@(private)
+evaluate_condition_expression :: proc(
+	expr: p.Expression,
+	scope: ^s.Scope,
+) -> (
+	result: bool,
+	err: RuntimeError = NoErrorUnit,
+) {
+	condition_value: p.Value
+	condition_value, err = execute_expression(expr, scope)
+	if !is_runtime_error_ok(err) do return
+
+	is_bool: bool
+	result, is_bool = condition_value.(bool)
+	return
+}
+
+@(private)
 execute_if_statement :: proc(
 	if_statement: p.IfStatement,
 	parent_scope: ^s.Scope
@@ -93,11 +113,9 @@ execute_if_statement :: proc(
 	returned := NoReturn,
 	err: RuntimeError = NoErrorUnit,
 ) {
-	condition_value: p.Value
-	condition_value, err = execute_expression(if_statement.condition, parent_scope)
+	result: bool
+	result, err = evaluate_condition_expression(if_statement.condition, parent_scope)
 	if !is_runtime_error_ok(err) do return
-	result, ok := condition_value.(bool)
-	if !ok do return NoReturn, TypeError{msg="If statement condition returned a false value"}
 
 	if result {
 		if_scope := new(s.Scope)
