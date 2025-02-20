@@ -51,17 +51,15 @@ try_match_to_assignable_operator :: proc(
 	}
 	defer delete(operators_with_possible_trailing_equals)
 
-	for key, value in operators_with_possible_trailing_equals {
-		if input_chars[char_index^] == key {
-			ok = true
-			if char_index^ + 1 < len(input_chars) && input_chars[char_index^ + 1] == '=' {
-				char_index^ += 1
-				found_operator = value.assign_op
-			} else {
-				found_operator = value.default_op
-			}
-			break
-		}
+	op, found_op := operators_with_possible_trailing_equals[input_chars[char_index^]]
+	if !found_op do return
+	ok = true
+
+	if char_index^ + 1 < len(input_chars) && input_chars[char_index^ + 1] == '=' {
+		char_index^ += 1
+		found_operator = op.assign_op
+	} else {
+		found_operator = op.default_op
 	}
 
 	return

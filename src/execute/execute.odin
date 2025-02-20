@@ -100,6 +100,7 @@ evaluate_condition_expression :: proc(
 
 	is_bool: bool
 	result, is_bool = get_value(condition_value).(bool)
+	if !is_bool do err = TypeError{msg="Expected condition to return bool", value1=.Bool, value2=get_value_type(condition_value)}
 	return
 }
 

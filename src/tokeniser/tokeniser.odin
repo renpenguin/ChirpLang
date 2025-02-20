@@ -109,6 +109,6 @@ tokenise_next_char :: proc(tokens: ^TokenStream, input_chars: []rune, char_index
 	case '{': append(tokens, Bracket{.Curly, .Opening})
 	case '}': append(tokens, Bracket{.Curly, .Closing})
 
-	case: fmt.println("unexpected token!", c)
+	case: fmt.eprintln("unexpected token!", c)
 	}
 }

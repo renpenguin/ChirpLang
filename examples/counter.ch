@@ -1,8 +1,7 @@
 import time
 
 var counter = 0
-
-print("Counting from {counter}")
+print(f"Counting from {counter}")
 
 while counter < 10 {
     counter += 1

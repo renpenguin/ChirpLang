@@ -6,7 +6,7 @@ import d "../definitions"
 import "core:fmt"
 
 @(private = "file")
-std_print :: proc(args: [dynamic]p.Value) -> (return_value: p.Value = p.None, err := FuncError{ok = true}) {
+std_print :: proc(args: [dynamic]p.Value) -> (return_value := p.None, err := FuncError{ok = true}) {
 	for arg in args {
 		fmt.printf("%v ", arg)
 	}

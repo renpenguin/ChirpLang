@@ -47,11 +47,11 @@ try_match_to_literal :: proc(input_chars: []rune, char_index: ^int) -> (literal:
 				j += 1
 				escaped_rune: rune
 				switch input_chars[j] {
-					case 'a': escaped_rune = '\a'
-					case 'b': escaped_rune = '\b'
-					case 'n': escaped_rune = '\n'
-					case 'r': escaped_rune = '\r'
-					case: escaped_rune = input_chars[j]
+				case 'a': escaped_rune = '\a'
+				case 'b': escaped_rune = '\b'
+				case 'n': escaped_rune = '\n'
+				case 'r': escaped_rune = '\r'
+				case:     escaped_rune = input_chars[j]
 				}
 				append(&string_runes, escaped_rune)
 			case '\n':

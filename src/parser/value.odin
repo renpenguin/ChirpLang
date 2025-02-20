@@ -20,7 +20,7 @@ literal_to_value :: proc(literal: t.Literal) -> Value {
 	case t.float: return Value(l)
 	case string:  return Value(l)
 	case bool:    return Value(l)
-	case: panic("Unreachable")
+	case: panic("Unreachable, was a new literal implemented?")
 	}
 }
 
