@@ -5,7 +5,7 @@ import t "../tokeniser"
 // Executes a block until the condition evaluates to false or `Break` is triggered. Expected patten `while $expr$ $block$` or `forever $block$`
 While :: struct {
 	condition: Expression,
-	block: Block,
+	block:     Block,
 }
 
 Return :: distinct Expression
@@ -23,24 +23,14 @@ Statement :: union {
 	While,
 	Expression,
 	Return,
-	LoopControl
+	LoopControl,
 }
 
 // Captures a block of statements surrounded by {}. `token_index` should be the index of the first {
 @(private)
-capture_block :: proc(
-	tokens: t.TokenStream,
-	token_index: ^int,
-) -> (
-	block: Block,
-	err: SyntaxError,
-) {
+capture_block :: proc(tokens: t.TokenStream, token_index: ^int) -> (block: Block, err: SyntaxError) {
 	using t
-	err = expect_token(
-		tokens[token_index^],
-		Bracket{.Curly, .Opening},
-		"Expected scope to begin with {",
-	)
+	err = expect_token(tokens[token_index^], Bracket{.Curly, .Opening}, "Expected scope to begin with {")
 	if !err.ok do return
 
 	captured_tokens: TokenStream // Deleted by `parse()`
@@ -78,10 +68,7 @@ try_match_import :: proc(
 	for {
 		char_index^ += 1
 		keyword: CustomKeyword
-		keyword, err = expect_custom_keyword(
-			tokens[char_index^],
-			"Expected library reference in import statement",
-		)
+		keyword, err = expect_custom_keyword(tokens[char_index^], "Expected library reference in import statement")
 		if !err.ok do return
 
 		append(&import_statement.?, keyword_to_name_ref(keyword))
@@ -125,28 +112,18 @@ try_match_func_definition :: proc(
 	func_def: FunctionDefinition
 
 	char_index^ += 1
-	func_def.name, err = expect_name_def(
-		tokens[char_index^],
-		"Expected function name in function definition",
-	)
+	func_def.name, err = expect_name_def(tokens[char_index^], "Expected function name in function definition")
 	if !err.ok do return
 
 	char_index^ += 1
-	err = expect_token(
-		tokens[char_index^],
-		Token(Bracket{.Round, .Opening}),
-		"Expected ( in function",
-	)
+	err = expect_token(tokens[char_index^], Token(Bracket{.Round, .Opening}), "Expected ( in function")
 	if !err.ok do return
 
 	for {
 		char_index^ += 1
 		if tokens[char_index^] == Token(Bracket{.Round, .Closing}) do break
 		arg_name: NameDefinition
-		arg_name, err = expect_name_def(
-			tokens[char_index^],
-			"Expected argument name in function definition",
-		)
+		arg_name, err = expect_name_def(tokens[char_index^], "Expected argument name in function definition")
 		if !err.ok do return
 
 		char_index^ += 1
@@ -159,11 +136,7 @@ try_match_func_definition :: proc(
 
 		char_index^ += 1
 		if tokens[char_index^] == Token(Bracket{.Round, .Closing}) do break
-		err = expect_token(
-			tokens[char_index^],
-			Comma,
-			"Expected ) or comma after function argument",
-		)
+		err = expect_token(tokens[char_index^], Comma, "Expected ) or comma after function argument")
 	}
 
 	if expect_token(tokens[char_index^ + 1], t.Token(t.Keyword(.ReturnType)), "").ok {

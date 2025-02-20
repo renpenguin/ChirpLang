@@ -10,7 +10,7 @@ NameDefinition :: distinct string
 NameReference :: struct {
 	path: Maybe([dynamic]NameDefinition),
 	// The actual name being accessed. Begins with a letter, can contain letters, digits or an `_`
-	name:  NameDefinition,
+	name: NameDefinition,
 }
 
 expect_name_def :: proc(

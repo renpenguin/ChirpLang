@@ -15,11 +15,11 @@ destroy_block :: proc(block: Block) {
 				destroy_name_ref(library)
 			}
 			delete(import_statement)
+
 		case VariableDefinition:
 			var_def := instruction.(VariableDefinition)
 			delete(string(var_def.name))
 			destroy_expression(var_def.expr)
-
 		case VariableAssignment:
 			var_ass := instruction.(VariableAssignment)
 			destroy_name_ref(var_ass.target)
@@ -45,7 +45,8 @@ destroy_block :: proc(block: Block) {
 
 		case Return:
 			destroy_expression(Expression(instruction.(Return)))
-		case LoopControl: break
+		case LoopControl:
+			break
 		}
 
 	}

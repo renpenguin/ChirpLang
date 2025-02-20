@@ -1,17 +1,12 @@
 package libraries
 
-import "core:math/rand"
-import d "../definitions"
 import p "../../parser"
 import t "../../tokeniser"
+import d "../definitions"
+import "core:math/rand"
 
 @(private = "file")
-mod_random_range :: proc(
-	args: [dynamic]p.Value,
-) -> (
-	return_value: p.Value,
-	err := FuncError{ok = true},
-) {
+mod_random_range :: proc(args: [dynamic]p.Value) -> (return_value: p.Value, err := FuncError{ok = true}) {
 	if len(args) != 2 do return p.None, FuncError{msg = "Incorrect number of args"}
 	min, max: int
 	min, err.ok = args[0].(int)
@@ -24,7 +19,7 @@ mod_random_range :: proc(
 	return rand.int_max(max - min) + min, err
 }
 
-@private
+@(private)
 mod_random :: proc() -> d.Module {
 	using p, d
 	mod := Module{NameDefinition("random"), new(Scope)}

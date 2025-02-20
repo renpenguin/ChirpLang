@@ -30,7 +30,7 @@ Token :: union #no_nil {
 }
 
 // Takes a block of code in the form of plain text as parameter and returns it as a dynamic array of tokens.
-tokenise :: proc(input: string,) -> (tokens: TokenStream) {
+tokenise :: proc(input: string) -> (tokens: TokenStream) {
 	input_chars := utf8.string_to_runes(strings.trim_space(input))
 	defer delete(input_chars)
 
@@ -46,11 +46,7 @@ tokenise :: proc(input: string,) -> (tokens: TokenStream) {
 
 // Capture the next character from the rune slice, starting from `char_index`
 @(private = "file")
-tokenise_next_char :: proc(
-	tokens: ^TokenStream,
-	input_chars: []rune,
-	char_index: ^int,
-) {
+tokenise_next_char :: proc(tokens: ^TokenStream, input_chars: []rune, char_index: ^int) {
 	c := input_chars[char_index^]
 	if strings.is_space(c) && c != '\n' do return // Ignore whitespace
 
@@ -90,11 +86,11 @@ tokenise_next_char :: proc(
 	if keyword, ok := try_parse_keyword(input_chars, char_index); ok {
 		// Attempt to map the keyword onto `true` or `false`
 		bool_literal, bool_ok := try_match_keyword_to_bool_literal(keyword).?
-		if bool_ok {append(tokens, bool_literal); return}
+		if bool_ok {append(tokens, bool_literal);return}
 
 		// Attempt to map the keyword onto `and` or `or`
 		cond_literal, cond_ok := try_match_keyword_to_and_or(keyword).?
-		if cond_ok {append(tokens, cond_literal); return}
+		if cond_ok {append(tokens, cond_literal);return}
 
 		append(tokens, keyword)
 		return
@@ -105,11 +101,11 @@ tokenise_next_char :: proc(
 	case ',': append(tokens, Comma)
 
 	// Brackets
-	case '(': append(tokens, Bracket{.Round,  .Opening})
-	case ')': append(tokens, Bracket{.Round,  .Closing})
+	case '(': append(tokens, Bracket{.Round, .Opening})
+	case ')': append(tokens, Bracket{.Round, .Closing})
 	case '[': append(tokens, Bracket{.Square, .Opening})
 	case ']': append(tokens, Bracket{.Square, .Closing})
-	case '{': append(tokens, Bracket{.Curly,  .Opening})
+	case '{': append(tokens, Bracket{.Curly, .Opening})
 	case '}': append(tokens, Bracket{.Curly, .Closing})
 
 	case: fmt.println("unexpected token!", c)

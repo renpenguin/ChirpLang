@@ -26,13 +26,7 @@ try_match_keyword_to_bool_literal :: proc(keyword: Keyword) -> (literal: Maybe(L
 
 // Attempts to match a leading `string`, `int` or `float` literal. Boolean literals are handled in `tokenise_next_char`
 @(private)
-try_match_to_literal :: proc(
-	input_chars: []rune,
-	char_index: ^int,
-) -> (
-	literal: Literal,
-	ok: bool,
-) {
+try_match_to_literal :: proc(input_chars: []rune, char_index: ^int) -> (literal: Literal, ok: bool) {
 	c := input_chars[char_index^]
 
 	// String literals
@@ -77,16 +71,10 @@ try_match_to_literal :: proc(
 }
 
 @(private = "file")
-try_match_to_number :: proc(
-	input_chars: []rune,
-	char_index: ^int,
-) -> (
-	literal: Literal,
-	ok: bool,
-) {
+try_match_to_number :: proc(input_chars: []rune, char_index: ^int) -> (literal: Literal, ok: bool) {
 	c := input_chars[char_index^]
 
-	if unicode.is_number(c) { // TODO: handle negative numbers
+	if unicode.is_number(c) { 	// TODO: handle negative numbers
 		number_literal := int(c) - 48
 
 		for j := char_index^ + 1; j < len(input_chars); j += 1 {

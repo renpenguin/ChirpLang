@@ -122,7 +122,7 @@ evaluate_name_ref_with_scope :: proc(name_ref: p.NameReference, type: enum {
 	found_item, err = search_for_reference(&scope, name_ref)
 	if !err.ok do return
 
-	err = ScopeError{err_source = name_ref.name, type = .NotFoundAtPath, ok = true}
+	err = ScopeError{name_ref.name, .NotFoundAtPath, true}
 	switch type { 	// TODO: make this able to handle passing function references
 	case .Module:
 		if _, ok := found_item.(Module); !ok do err.ok = false

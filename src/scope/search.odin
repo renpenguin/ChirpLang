@@ -72,7 +72,10 @@ search_for_reference :: proc(
 	}
 
 	found_item = search_scope(name_ref_scope, query.name)
-	if found_item == nil do err = ScopeError{err_source = query.name, type = .NotFoundAtPath}
+	if found_item == nil do err = ScopeError {
+		err_source = query.name,
+		type       = .NotFoundAtPath,
+	}
 
 	return
 }

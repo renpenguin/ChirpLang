@@ -20,7 +20,7 @@ append_new_line :: proc(tokens: ^TokenStream) {
 		append(tokens, NewLine)
 		return
 	}
-	
+
 	previous_token, was_new_line := tokens[len(tokens) - 1].(NewLineType)
 	if !was_new_line {
 		append(tokens, NewLine)

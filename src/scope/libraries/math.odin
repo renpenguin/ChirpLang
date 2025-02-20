@@ -1,17 +1,12 @@
 package libraries
 
-import "core:math"
-import d "../definitions"
 import p "../../parser"
 import t "../../tokeniser"
+import d "../definitions"
+import "core:math"
 
 @(private = "file")
-mod_math_sin :: proc(
-	args: [dynamic]p.Value,
-) -> (
-	return_value: p.Value,
-	err := FuncError{ok = true},
-) {
+mod_math_sin :: proc(args: [dynamic]p.Value) -> (return_value: p.Value, err := FuncError{ok = true}) {
 	if len(args) != 1 do return p.None, FuncError{msg = "Incorrect number of args, expected 1"}
 
 	value, ok := args[0].(t.float)
@@ -20,7 +15,7 @@ mod_math_sin :: proc(
 	return math.sin_f64(value), err
 }
 
-@private
+@(private)
 mod_math :: proc() -> d.Module {
 	using p, d
 	mod := Module{NameDefinition("math"), new(Scope)}

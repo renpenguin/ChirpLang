@@ -4,11 +4,11 @@ import t "../tokeniser"
 
 // Potential syntax error
 SyntaxError :: struct {
-	msg: string,
+	msg:   string,
 	// The keyword to blame. Helpful for giving the user more context about the error (should every keyword contain a (line,column) property for errors?)
-	found:     Maybe(t.Token),
+	found: Maybe(t.Token),
 	// Whether the code ran fine actually. When `false`, an error has occured
-	ok:        bool,
+	ok:    bool,
 }
 
 // Ensure that the passed token is a `CustomKeyword`, and return it or an error if it isnt

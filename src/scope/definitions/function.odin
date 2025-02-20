@@ -4,7 +4,7 @@ import p "../../parser"
 
 // Defines a function. Expected pattern `func $name$($name$, ...) $block$`
 InterpretedFunction :: struct {
-	using func: p.FunctionDefinition,
+	using func:   p.FunctionDefinition,
 	parent_scope: ^Scope,
 }
 

@@ -26,12 +26,7 @@ Expression :: union { // TODO: make no_nil
 }
 
 // Builds an Expression out of the loaded tokens
-build_expression :: proc(
-	tokens: t.TokenStream,
-) -> (
-	expr: Expression,
-	err := SyntaxError{ok = true},
-) {
+build_expression :: proc(tokens: t.TokenStream) -> (expr: Expression, err := SyntaxError{ok = true}) {
 	using t
 	stored_operator: ArithmeticOperator
 	state: enum {
@@ -46,27 +41,18 @@ build_expression :: proc(
 
 		if op, ok := tokens[i].(Operator); ok {
 			arith_op, ok := op.(ArithmeticOperator)
-			if !ok {
-				return nil, SyntaxError {
-					msg = "Invalid expression: expected arithmetic operator",
-					found = Token(op),
-				}
-			}
+			if !ok do return nil, SyntaxError{msg = "Invalid expression: expected arithmetic operator", found = Token(op)}
 
 			switch state {
 			case .StoredPart:
 				stored_operator = arith_op
 				state = .StoredPartAndOperator
 			case .StoredPartAndOperator:
-				return nil, SyntaxError {
-					msg = "Invalid expression: operator follows other operator",
-				}
+				return nil, SyntaxError{msg = "Invalid expression: operator follows other operator"}
 			// Combine expressions into operation
 			case .None:
 				// TODO: handle Neg and Not here
-				return nil, SyntaxError {
-					msg = "Invalid expression: operator does not follow expression ",
-				}
+				return nil, SyntaxError{msg = "Invalid expression: operator does not follow expression "}
 			}
 
 			continue
@@ -121,9 +107,7 @@ build_expression :: proc(
 		if ok {
 			switch state {
 			case .StoredPart:
-				return nil, SyntaxError {
-					msg = "Invalid expression: literal follows other expression",
-				}
+				return nil, SyntaxError{msg = "Invalid expression: literal follows other expression"}
 			case .StoredPartAndOperator:
 				// Combine expressions into one operation
 				operation := Operation {

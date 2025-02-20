@@ -5,12 +5,7 @@ import s "../scope"
 import t "../tokeniser"
 
 @(private)
-assign_operation :: proc(
-	assignment: p.VariableAssignment,
-	scope: ^s.Scope,
-) -> (
-	err: RuntimeError = NoErrorUnit,
-) {
+assign_operation :: proc(assignment: p.VariableAssignment, scope: ^s.Scope) -> (err: RuntimeError = NoErrorUnit) {
 	scope_item, _ := s.search_for_reference(scope, assignment.target)
 	variable := scope_item.(^s.Variable)
 
@@ -50,7 +45,7 @@ process_operation :: proc(
 	err := TypeError{ok = true},
 ) {
 	value1, value2, ok := match_types(value1, value2)
-	if !ok do return p.None, TypeError{
+	if !ok do return p.None, TypeError {
 		msg = "Could not match value types",
 		value1 = p.get_value_type(value1),
 		value2 = p.get_value_type(value2)
@@ -120,25 +115,25 @@ match_types :: proc(value1, value2: p.Value) -> (matched_value1, matched_value2:
 		matching_types = true
 		if type1 == .Float {
 			#partial switch type2 {
-			case .Int: value2 = f64(value2.(int)); type2 = .Float
+			case .Int:  value2 = f64(value2.(int)); type2 = .Float
 			case .Bool: value2 = value2.(bool) ? 1.0 : 0.0; type2 = .Float
-			case: matching_types = false
+			case:       matching_types = false
 			}
 		}
 
 		if type1 == .Int {
 			#partial switch type2 {
 			case .Float: value1 = f64(value1.(int)); type1 = .Float
-			case .Bool: value2 = value2.(bool) ? 1 : 0; type2 = .Int
-			case: matching_types = false
+			case .Bool:  value2 = value2.(bool) ? 1 : 0; type2 = .Int
+			case:        matching_types = false
 			}
 		}
 
 		if type1 == .Bool {
 			#partial switch type2 {
 			case .Float: value1 = value1.(bool) ? 1 : 0; type1 = .Float
-			case .Int: value1 = value1.(bool) ? 1 : 0; type1 = .Int
-			case: matching_types = false
+			case .Int:   value1 = value1.(bool) ? 1 : 0; type1 = .Int
+			case:        matching_types = false
 			}
 		}
 

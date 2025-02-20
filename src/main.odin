@@ -34,18 +34,12 @@ run :: proc(input: string) {
 		switch scope_err.type {
 		case .Redefinition:
 			if _, ok := scope_err.err_source.(scope.Module); ok {
-				fmt.eprintln(
-					"Scope error: attempt to import module that already exists:",
-					scope_err.err_source,
-				)
+				fmt.eprintln("Scope error: attempt to import module that already exists:", scope_err.err_source)
 			} else {
 				fmt.eprintln("Scope error: redefinition of function", scope_err.err_source)
 			}
 		case .ModifiedImmutable:
-			fmt.eprintln(
-				"Scope error: attempted to modify immutable variable:",
-				scope_err.err_source,
-			)
+			fmt.eprintln("Scope error: attempted to modify immutable variable:", scope_err.err_source)
 		case .ModuleNotFound:
 			fmt.eprintln("Scope error: couldn't find module:", scope_err.err_source)
 		case .InvalidPath:
@@ -71,10 +65,7 @@ run :: proc(input: string) {
 		os.exit(1)
 	}
 	if return_val.handle_by != .DontHandle {
-		fmt.eprintln(
-			"Runtime error: return/break statement should not be used at file scope, found",
-			return_val,
-		) // TODO: do this (and same for forever) in `scope.evaluate`
+		fmt.eprintln("Runtime error: return/break statement should not be used at file scope, found", return_val) // TODO: do this (and same for forever) in `scope.evaluate`
 		os.exit(1)
 	}
 }

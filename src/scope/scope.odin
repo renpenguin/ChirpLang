@@ -27,13 +27,7 @@ ScopeError :: struct {
 }
 
 // Builds a `Scope` value for the block and any nested functions or libraries. This will remove all `FunctionDefinition`s and `ImportStatement`s from the block
-build_scope :: proc(
-	block: ^p.Block,
-	parent_module: ^Scope,
-) -> (
-	scope: ^Scope,
-	err := ScopeError{ok = true},
-) {
+build_scope :: proc(block: ^p.Block, parent_module: ^Scope) -> (scope: ^Scope, err := ScopeError{ok = true}) {
 	scope = new(Scope)
 	scope.parent_scope = parent_module
 
@@ -71,7 +65,7 @@ build_scope :: proc(
 			defer destroy_scope(func_scope)
 			func_scope.parent_scope = interp_func.parent_scope
 
-			for arg in interp_func.args { // TODO: check arg types/count against passed args
+			for arg in interp_func.args { 	// TODO: check arg types/count against passed args
 				append(&func_scope.constants, Variable{arg.name, p.None, false})
 			}
 
