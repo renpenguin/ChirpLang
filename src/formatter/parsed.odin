@@ -78,7 +78,12 @@ display_expression :: proc(expr: p.Expression) {
 		fmt.print(" }")
 
 	case FormatString:
-		fmt.print("Format{ \"", expr.(FormatString), "\" }", sep = "")
+		fmt.print("Format{ ")
+		for arg in expr.(p.FormatString) {
+			display_expression(arg)
+			fmt.print(", ")
+		}
+		fmt.print("\b\b }")
 
 	case NameReference:
 		fmt.print(name_ref_to_string(expr.(p.NameReference)))

@@ -4,6 +4,7 @@ import p "../parser"
 import s "../scope"
 import t "../tokeniser"
 import "core:fmt"
+import "core:strings"
 
 STACK_LIMIT :: 500
 
@@ -163,7 +164,15 @@ execute_expression :: proc(
 
 		return output, err
 	case FormatString:
-		panic("todo") // TODO: implement string formatting. code below should return a string
+		sb := strings.builder_make()
+		defer strings.builder_destroy(&sb)
+
+		for arg in expr.(p.FormatString) {
+			value: p.Value
+			value, err = execute_expression(arg, scope)
+			fmt.sbprint(&sb, value)
+		}
+		value = strings.clone(strings.to_string(sb))
 	case Value:
 		return expr.(Value), err
 	case NameReference:

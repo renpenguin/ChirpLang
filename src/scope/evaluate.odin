@@ -84,13 +84,10 @@ evaluate_expression_with_scope :: proc(expr: p.Expression, scope: ^Scope) -> (er
 		err = evaluate_name_ref_with_scope(func_call.name, .Function, scope^)
 		if !err.ok do return
 
-		for arg in func_call.args {
+		for arg in func_call.args { // TODO: evaluate that expressions fit func args
 			err = evaluate_expression_with_scope(arg, scope)
 			if !err.ok do return
 		}
-
-	// TODO: evaluate that expressions fit func args
-
 	case p.Operation:
 		op := expr.(p.Operation)
 
@@ -99,7 +96,10 @@ evaluate_expression_with_scope :: proc(expr: p.Expression, scope: ^Scope) -> (er
 		err = evaluate_expression_with_scope(op.right^, scope)
 		if !err.ok do return
 	case p.FormatString:
-		panic("todo") // TODO: parse FormatString expressions
+		for arg in expr.(p.FormatString) {
+			err = evaluate_expression_with_scope(arg, scope)
+			if !err.ok do return
+		}
 	case p.NameReference:
 		err = evaluate_name_ref_with_scope(expr.(p.NameReference), .Variable, scope^)
 		if !err.ok do return
