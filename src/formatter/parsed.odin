@@ -27,8 +27,9 @@ display_block :: proc(block: p.Block, indent := 0, ignore_scope_statements := fa
 			fmt.println("[FuncDef] ", func_def.name, func_def.args, ": ", sep = "")
 			display_block(func_def.block, indent + 1)
 		case While:
-			fmt.println("[While]:")
+			fmt.print("[While] ")
 			display_expression(instruction.(p.While).condition)
+			fmt.println(":")
 			display_block(instruction.(While).block, indent + 1)
 		case VariableDefinition:
 			var_def := instruction.(VariableDefinition)

@@ -44,6 +44,7 @@ main :: proc() {
 				fmt.eprintf("=== %v allocations not freed: ===\n", len(track.allocation_map))
 				for _, entry in track.allocation_map {
 					fmt.eprintf("- %v bytes @ %v\n", entry.size, entry.location)
+					fmt.eprintln("  ^", transmute(string)mem.Raw_String{cast(^u8)entry.memory, entry.size})
 				}
 			}
 			if len(track.bad_free_array) > 0 {

@@ -152,17 +152,13 @@ execute_expression :: proc(
 	case Operation:
 		op := expr.(p.Operation)
 
-		value1, value2, output: Value
-
+		value1, value2: Value
 		value1, err = execute_expression(op.left^, scope)
 		if !is_runtime_error_ok(err) do return
 		value2, err = execute_expression(op.right^, scope)
 		if !is_runtime_error_ok(err) do return
 
-		output, err = process_operation(value1, value2, op.op)
-		if !is_runtime_error_ok(err) do return
-
-		return output, err
+		return process_operation(value1, value2, op.op)
 	case FormatString:
 		sb := strings.builder_make()
 		defer strings.builder_destroy(&sb)
@@ -174,12 +170,12 @@ execute_expression :: proc(
 		}
 		value = strings.clone(strings.to_string(sb))
 	case Value:
-		return expr.(Value), err
+		value = expr.(Value)
 	case NameReference:
 		name_ref := expr.(NameReference)
 		variable, _ := s.search_for_reference(scope, name_ref)
 
-		return variable.(^s.Variable).contents, err
+		value = variable.(^s.Variable).contents
 	}
 
 	return

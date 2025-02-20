@@ -17,6 +17,33 @@ Expression :: union #no_nil {
 	NameReference,
 }
 
+// Captures all `Token`s until a newline (and all opened brackets have been closed) into an `Expression`
+@(private)
+capture_expression :: proc(
+	tokens: t.TokenStream,
+	token_index: ^int,
+	end_token_matcher: proc(token: t.Token) -> bool = t.is_new_line,
+) -> (
+	expr: Expression,
+	err: SyntaxError,
+) {
+	captured_tokens: t.TokenStream
+	defer delete(captured_tokens)
+
+	bracket_depth := 0
+	for token_index^ < len(tokens) {
+		if end_token_matcher(tokens[token_index^]) && bracket_depth == 0 do break
+		if bracket, ok := tokens[token_index^].(t.Bracket); ok {
+			bracket_depth += bracket.state == .Opening ? 1 : -1
+			if bracket_depth < 0 do return Value(None), SyntaxError{msg = "Found closing bracket with no matching opening bracket", found = tokens[token_index^]}
+		}
+		append(&captured_tokens, tokens[token_index^])
+		token_index^ += 1
+	}
+
+	return build_expression(captured_tokens)
+}
+
 // Builds an Expression out of the loaded tokens
 build_expression :: proc(tokens: t.TokenStream) -> (expr: Expression, err := SyntaxError{ok = true}) {
 	using t
@@ -61,10 +88,10 @@ build_expression :: proc(tokens: t.TokenStream) -> (expr: Expression, err := Syn
 			if !ok do return Value(None), SyntaxError{msg = "Invalid expression: Expected custom keyword", found = Token(keyword)}
 			name_ref := keyword_to_name_ref(custom_keyword)
 
-			success: bool // Try function
-			to_store, success, err = build_function(name_ref, tokens, &i)
+			// Try function
+			to_store, err, ok = build_function(name_ref, tokens, &i)
 			if !err.ok do return
-			if !success do to_store = name_ref // If failed, must be variable reference
+			if !ok do to_store = name_ref // If failed, must be variable reference
 		} else if tokens[i] == Token(Bracket{.Round, .Opening}) { 	// Nested expression
 			was_comma: bool
 			to_store, err, was_comma = capture_arg_until_closing_bracket(tokens, &i)
@@ -105,31 +132,4 @@ build_expression :: proc(tokens: t.TokenStream) -> (expr: Expression, err := Syn
 	}
 
 	return
-}
-
-// Captures all `Token`s until a newline (and all opened brackets have been closed) into an `Expression`
-@(private)
-capture_expression :: proc(
-	tokens: t.TokenStream,
-	token_index: ^int,
-	end_token_matcher: proc(token: t.Token) -> bool = t.is_new_line,
-) -> (
-	expr: Expression,
-	err: SyntaxError,
-) {
-	captured_tokens: t.TokenStream
-	defer delete(captured_tokens)
-
-	bracket_depth := 0
-	for token_index^ < len(tokens) {
-		if end_token_matcher(tokens[token_index^]) && bracket_depth == 0 do break
-		if bracket, ok := tokens[token_index^].(t.Bracket); ok {
-			bracket_depth += bracket.state == .Opening ? 1 : -1
-			if bracket_depth < 0 do return Value(None), SyntaxError{msg = "Found closing bracket with no matching opening bracket", found = tokens[token_index^]}
-		}
-		append(&captured_tokens, tokens[token_index^])
-		token_index^ += 1
-	}
-
-	return build_expression(captured_tokens)
 }

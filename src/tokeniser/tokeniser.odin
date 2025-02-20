@@ -31,6 +31,7 @@ Token :: union #no_nil {
 
 // Takes a block of code in the form of plain text as parameter and returns it as a dynamic array of tokens.
 tokenise :: proc(input: string) -> (tokens: TokenStream) {
+	if len(input) == 0 do return
 	input_chars := utf8.string_to_runes(strings.trim_space(input))
 	defer delete(input_chars)
 
