@@ -17,7 +17,7 @@ Operation :: struct {
 FormatString :: distinct string // replace with array of unions..?
 
 // Block of code delimited by `()` that evaluates to one value
-Expression :: union { // TODO: make no_nil
+Expression :: union #no_nil {
 	FunctionCall,
 	Operation,
 	FormatString,
@@ -41,18 +41,18 @@ build_expression :: proc(tokens: t.TokenStream) -> (expr: Expression, err := Syn
 
 		if op, ok := tokens[i].(Operator); ok {
 			arith_op, ok := op.(ArithmeticOperator)
-			if !ok do return nil, SyntaxError{msg = "Invalid expression: expected arithmetic operator", found = Token(op)}
+			if !ok do return Value(None), SyntaxError{msg = "Invalid expression: expected arithmetic operator", found = Token(op)}
 
 			switch state {
 			case .StoredPart:
 				stored_operator = arith_op
 				state = .StoredPartAndOperator
 			case .StoredPartAndOperator:
-				return nil, SyntaxError{msg = "Invalid expression: operator follows other operator"}
+				return Value(None), SyntaxError{msg = "Invalid expression: operator follows other operator"}
 			// Combine expressions into operation
 			case .None:
 				// TODO: handle Neg and Not here
-				return nil, SyntaxError{msg = "Invalid expression: operator does not follow expression "}
+				return Value(None), SyntaxError{msg = "Invalid expression: operator does not follow expression "}
 			}
 
 			continue
@@ -62,20 +62,20 @@ build_expression :: proc(tokens: t.TokenStream) -> (expr: Expression, err := Syn
 			to_store = literal_to_value(literal)
 		} else if tokens[i] == Token(Keyword(.FString)) { 	// f-string
 			FSTRING_ERROR_MSG :: "Invalid expression: Expected string literal after `f` keyword"
-			if i + 1 >= len(tokens) do return nil, SyntaxError{msg = FSTRING_ERROR_MSG}
+			if i + 1 >= len(tokens) do return Value(None), SyntaxError{msg = FSTRING_ERROR_MSG}
 
 			literal, lit_ok := tokens[i + 1].(Literal)
-			if !lit_ok do return nil, SyntaxError{msg = FSTRING_ERROR_MSG, found = Token(literal)}
+			if !lit_ok do return Value(None), SyntaxError{msg = FSTRING_ERROR_MSG, found = tokens[i + 1]}
 			str, str_ok := literal.(string)
-			if !str_ok do return nil, SyntaxError{msg = FSTRING_ERROR_MSG, found = Token(literal)}
+			if !str_ok do return Value(None), SyntaxError{msg = FSTRING_ERROR_MSG, found = tokens[i + 1]}
 
 			i += 1
 			to_store = FormatString(str)
 		} else if keyword, ok := tokens[i].(Keyword); ok { 	// Custom keyword
 			custom_keyword, ok := keyword.(CustomKeyword)
-			if !ok do return nil, SyntaxError{msg = "Invalid expression: Expected custom keyword", found = Token(keyword)}
+			if !ok do return Value(None), SyntaxError{msg = "Invalid expression: Expected custom keyword", found = Token(keyword)}
 
-			if i + 1 < len(tokens) && tokens[i + 1] == Token(Bracket{.Round, .Opening}) {
+			if i + 1 < len(tokens) && tokens[i + 1] == Token(Bracket{.Round, .Opening}) { 	// Function
 				i += 1
 				func_call := FunctionCall {
 					name = keyword_to_name_ref(custom_keyword),
@@ -98,16 +98,16 @@ build_expression :: proc(tokens: t.TokenStream) -> (expr: Expression, err := Syn
 			was_comma: bool
 			to_store, err, was_comma = capture_arg_until_closing_bracket(tokens, &i)
 			if !err.ok do return
-			if to_store == nil do return nil, SyntaxError{msg = "Invalid expression: found empty expression `()`"}
-			if was_comma do return nil, SyntaxError{msg = "Invalid expression: comma found separating values in expression"}
+			if to_store == nil do return Value(None), SyntaxError{msg = "Invalid expression: found empty expression `()`"}
+			if was_comma do return Value(None), SyntaxError{msg = "Invalid expression: comma found separating values in expression"}
 		}
 
 		s, ok := to_store.?
-		if !ok do return nil, SyntaxError{msg = "Invalid expression", found = Token(tokens[i])}
+		if !ok do return Value(None), SyntaxError{msg = "Invalid expression", found = Token(tokens[i])}
 		if ok {
 			switch state {
 			case .StoredPart:
-				return nil, SyntaxError{msg = "Invalid expression: literal follows other expression"}
+				return Value(None), SyntaxError{msg = "Invalid expression: literal follows other expression"}
 			case .StoredPartAndOperator:
 				// Combine expressions into one operation
 				operation := Operation {
@@ -128,9 +128,9 @@ build_expression :: proc(tokens: t.TokenStream) -> (expr: Expression, err := Syn
 
 	#partial switch state {
 	case .StoredPartAndOperator:
-		return nil, SyntaxError{msg = "Invalid expression: found trailing operator"}
+		return Value(None), SyntaxError{msg = "Invalid expression: found trailing operator"}
 	case .None:
-		return nil, SyntaxError{msg = "Empty expression"}
+		return Value(None), SyntaxError{msg = "Empty expression"}
 	}
 
 	return
@@ -154,10 +154,7 @@ capture_expression :: proc(
 		if end_token_matcher(tokens[token_index^]) && bracket_depth == 0 do break
 		if bracket, ok := tokens[token_index^].(t.Bracket); ok {
 			bracket_depth += bracket.state == .Opening ? 1 : -1
-			if bracket_depth < 0 do return nil, SyntaxError {
-				msg = "Found closing bracket with no matching opening bracket",
-				found = tokens[token_index^],
-			}
+			if bracket_depth < 0 do return Value(None), SyntaxError{msg = "Found closing bracket with no matching opening bracket", found = tokens[token_index^]}
 		}
 		append(&captured_tokens, tokens[token_index^])
 		token_index^ += 1
@@ -178,6 +175,7 @@ capture_arg_until_closing_bracket :: proc(
 ) {
 	token_index^ += 1
 	expr, err = capture_expression(tokens, token_index, is_end_of_function_arg)
+	if err.msg == "Empty expression" {expr = nil; err.ok = true}
 
 	_, was_comma = tokens[token_index^].(t.CommaType)
 	return

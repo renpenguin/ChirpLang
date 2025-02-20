@@ -1,6 +1,7 @@
 package parser
 
 import t "../tokeniser"
+import "core:fmt"
 
 // Potential syntax error
 SyntaxError :: struct {
@@ -35,4 +36,16 @@ expect_custom_keyword :: proc(
 @(private)
 expect_token :: proc(token, expected_token: t.Token, error_msg: string) -> (err: SyntaxError) {
 	return SyntaxError{msg = error_msg, found = token, ok = token == expected_token}
+}
+
+// Display an appropriate error message for the passed error, and returns true if an error was found and printed
+display_syntax_error :: proc(err: SyntaxError) -> bool {
+	if !err.ok {
+		if found, ok := err.found.?; ok {
+			fmt.eprintln("Syntax error: ", err.msg, ", found ", found, sep = "")
+		} else {
+			fmt.eprintln("Syntax error: ", err.msg, sep = "")
+		}
+	}
+	return !err.ok
 }

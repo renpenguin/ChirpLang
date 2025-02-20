@@ -10,7 +10,7 @@ mod_time_sleep :: proc(args: [dynamic]p.Value) -> (return_value: p.Value = p.Non
 	if len(args) != 1 do return p.None, FuncError{msg = "Incorrect number of args"}
 	delay: f64
 	delay, err.ok = args[0].(t.float)
-	if !err.ok {err.msg = "passed value";return}
+	if !err.ok {err.msg = "Only argument must be float";return}
 
 	time.sleep(time.Duration(delay * f64(time.Second)))
 

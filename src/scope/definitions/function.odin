@@ -11,6 +11,7 @@ InterpretedFunction :: struct {
 // Error returned by external functions in case of an error with the input values
 FunctionError :: struct {
 	msg: string,
+	func_name: p.NameReference,
 	ok:  bool,
 }
 

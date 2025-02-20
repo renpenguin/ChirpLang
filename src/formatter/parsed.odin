@@ -89,7 +89,6 @@ display_expression :: proc(expr: p.Expression) {
 }
 
 @(deferred_out = delete_string)
-@(private)
 name_ref_to_string :: proc(name_ref: p.NameReference) -> string {
 	sb := strings.builder_make()
 	// defer strings.builder_destroy(&sb)

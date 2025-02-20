@@ -176,7 +176,7 @@ execute_expression :: proc(
 	return
 }
 
-@(private="file")
+@(private = "file")
 stack := 0
 
 call_function :: proc(
@@ -204,6 +204,7 @@ call_function :: proc(
 		}
 
 		return_val, err = func_pointer(values)
+		(&err.(s.FunctionError)).func_name = func_call.name
 
 	case s.InterpretedFunction:
 		interp_func_def := func.(s.InterpretedFunction)
@@ -212,12 +213,12 @@ call_function :: proc(
 		defer s.destroy_scope(func_scope)
 		func_scope.parent_scope = interp_func_def.parent_scope
 
-		if len(interp_func_def.args) != len(func_call.args) do return p.None, s.FunctionError{msg = "Incorrect number of arguments passed to function call"}
+		if len(interp_func_def.args) != len(func_call.args) do return p.None, s.FunctionError{msg = "Incorrect number of arguments passed to function call", func_name = func_call.name}
 		for def_arg, i in interp_func_def.args {
 			passed_arg: p.Value
 			passed_arg, err = execute_expression(func_call.args[i], scope)
 			if !is_runtime_error_ok(err) do return
-			if def_arg.type != p.get_value_type(passed_arg) do return p.None, s.FunctionError{msg = "Incorrect argument type"}
+			if def_arg.type != p.get_value_type(passed_arg) do return p.None, TypeError{msg = "Incorrect function argument type", value1 = def_arg.type, value2 = p.get_value_type(passed_arg)}
 
 			append(&func_scope.constants, s.Variable{def_arg.name, passed_arg, false})
 		}

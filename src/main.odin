@@ -14,58 +14,19 @@ run :: proc(input: string) {
 	tokens := tokeniser.tokenise(input)
 
 	block, parser_err := parser.parse(tokens)
+	if parser.display_syntax_error(parser_err) do os.exit(1)
 	defer parser.destroy_block(block)
-	if !parser_err.ok {
-		if found, ok := parser_err.found.?; ok {
-			fmt.eprintln("Syntax error: ", parser_err.msg, ", found ", found, sep = "")
-		} else {
-			fmt.eprintln("Syntax error: ", parser_err.msg, sep = "")
-		}
-		os.exit(1)
-	}
 
 	std := libraries.build_std_scope()
 	defer scope.destroy_scope(std)
 
 	block_scope, scope_err := scope.build_scope(&block, std)
+	if scope.display_scope_error(scope_err) do os.exit(1)
 	defer scope.destroy_scope(block_scope)
 
-	if !scope_err.ok {
-		switch scope_err.type {
-		case .Redefinition:
-			if _, ok := scope_err.err_source.(scope.Module); ok {
-				fmt.eprintln("Scope error: attempt to import module that already exists:", scope_err.err_source)
-			} else {
-				fmt.eprintln("Scope error: redefinition of function", scope_err.err_source)
-			}
-		case .ModifiedImmutable:
-			fmt.eprintln("Scope error: attempted to modify immutable variable:", scope_err.err_source)
-		case .ModuleNotFound:
-			fmt.eprintln("Scope error: couldn't find module:", scope_err.err_source)
-		case .InvalidPath:
-			fmt.eprintln("Scope error: invalid path:", scope_err.err_source)
-		case .NotFoundAtPath:
-			fmt.eprintln("Scope error: couldn't find name at path:", scope_err.err_source)
-		}
-		os.exit(1)
-	}
-
 	// TODO: if there is nothing aside from imports, functions and constants in the loaded block, set the main function as the primary block
-	return_val, err := execute.execute_block(block, block_scope)
-	if !execute.is_runtime_error_ok(err) {
-		fmt.eprint("Runtime error: ")
-		switch _ in err {
-		case execute.TypeError:
-			fmt.eprintln("Type error", err.(execute.TypeError))
-		case execute.StackOverflow:
-			fmt.eprintfln("Stack overflow error calling %s()", err.(execute.StackOverflow))
-		case scope.FunctionError:
-			fmt.eprintln("C function error", err.(scope.FunctionError))
-		case execute.NoError:
-			panic("Unreachable")
-		}
-		os.exit(1)
-	}
+	return_val, runtime_err := execute.execute_block(block, block_scope)
+	if execute.display_runtime_error(runtime_err) do os.exit(1)
 	if return_val.handle_by != .DontHandle {
 		fmt.eprintln("Runtime error: return/break statement should not be used at file scope, found", return_val) // TODO: do this (and same for forever) in `scope.evaluate`
 		os.exit(1)

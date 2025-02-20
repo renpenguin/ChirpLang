@@ -10,22 +10,6 @@ Module :: d.Module
 Variable :: d.Variable
 Scope :: d.Scope
 
-ScopeError :: struct {
-	err_source: union #no_nil {
-		[]p.NameDefinition,
-		p.NameDefinition,
-		Module,
-	},
-	type:       enum {
-		Redefinition,
-		ModifiedImmutable,
-		ModuleNotFound,
-		InvalidPath,
-		NotFoundAtPath,
-	},
-	ok:         bool,
-}
-
 // Builds a `Scope` value for the block and any nested functions or libraries. This will remove all `FunctionDefinition`s and `ImportStatement`s from the block
 build_scope :: proc(block: ^p.Block, parent_module: ^Scope) -> (scope: ^Scope, err := ScopeError{ok = true}) {
 	scope = new(Scope)
