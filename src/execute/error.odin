@@ -8,7 +8,7 @@ import "core:fmt"
 
 TypeError :: struct {
 	msg:            string,
-	value1, value2: Maybe(p.ValueType),
+	expected, found: Maybe(p.ValueType),
 	op:             Maybe(t.ArithmeticOperator),
 	ok:             bool,
 }
@@ -43,18 +43,22 @@ is_runtime_error_ok :: proc(err: RuntimeError) -> bool {
 // Display an appropriate error message for the passed error, and returns true if an error was found and printed
 display_runtime_error :: proc(err: RuntimeError) -> (is_err: bool) {
 	is_err = !is_runtime_error_ok(err)
-	if is_err {
-		fmt.eprint("Runtime error: ")
-		switch e in err {
-		case TypeError:
-			fmt.eprintln("Type error -", e.msg, e.value1, e.op, e.value2)
-		case StackOverflow:
-			fmt.eprintfln("Stack overflow error calling %s()", e)
-		case s.FunctionError:
-			fmt.eprintfln("Function error when calling %s()... %s", f.name_ref_to_string(e.func_name), e.msg)
-		case NoError:
-			panic("Unreachable")
-		}
+	if !is_err do return
+
+	fmt.eprint("Runtime error: ")
+	switch e in err {
+	case TypeError:
+		fmt.eprint("Type error -", e.msg)
+		if _, ok := e.expected.?; 	ok do fmt.eprint(", expected", e.expected)
+		if _, ok := e.found.?; 	ok do fmt.eprint(", found", e.found)
+		if _, ok := e.op.?; 		ok do fmt.eprint(" (using operator", e.op, "\b)")
+		fmt.eprintln()
+	case StackOverflow:
+		fmt.eprintfln("Stack overflow error calling %s()", e)
+	case s.FunctionError:
+		fmt.eprintfln("Function error when calling %s()... %s", f.name_ref_to_string(e.func_name), e.msg)
+	case NoError:
+		panic("Unreachable")
 	}
-	return is_err
+	return
 }

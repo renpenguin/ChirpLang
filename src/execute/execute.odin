@@ -100,7 +100,7 @@ evaluate_condition_expression :: proc(
 
 	is_bool: bool
 	result, is_bool = get_value(condition_value).(bool)
-	if !is_bool do err = TypeError{msg="Expected condition to return bool", value1=.Bool, value2=get_value_type(condition_value)}
+	if !is_bool do err = TypeError{msg="Expected condition to return bool", expected=.Bool, found=get_value_type(condition_value)}
 	return
 }
 
@@ -221,7 +221,7 @@ call_function :: proc(
 			passed_arg: RTValue
 			passed_arg, err = execute_expression(func_call.args[i], scope)
 			if !is_runtime_error_ok(err) do return
-			if def_arg.type != get_value_type(passed_arg) do return RTNone, TypeError{msg = "Incorrect function argument type", value1 = def_arg.type, value2 = get_value_type(passed_arg)}
+			if def_arg.type != get_value_type(passed_arg) do return RTNone, TypeError{msg = "Incorrect function argument type", expected = def_arg.type, found = get_value_type(passed_arg)}
 
 			append(&func_scope.constants, s.Variable{def_arg.name, passed_arg, false})
 		}
@@ -246,8 +246,8 @@ call_function :: proc(
 		if get_value_type(return_val) != func.return_type {
 			err = TypeError {
 				msg    = "Function return value does not match return type",
-				value1 = get_value_type(return_val),
-				value2 = func.return_type,
+				expected = func.return_type,
+				found = get_value_type(return_val),
 			}
 		}
 	}

@@ -50,8 +50,8 @@ process_operation :: proc(
 	// free_value(value1, value2)
 	if !ok do return RTNone, TypeError {
 		msg = "Could not match value types",
-		value1 = p.get_value_type(value1),
-		value2 = p.get_value_type(value2)
+		expected = p.get_value_type(value1),
+		found = p.get_value_type(value2)
 	}
 
 	switch p.get_value_type(value1) {
