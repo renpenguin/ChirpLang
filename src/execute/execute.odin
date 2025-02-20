@@ -168,7 +168,7 @@ execute_expression :: proc(
 			value, err = execute_expression(arg, scope)
 			fmt.sbprint(&sb, value)
 		}
-		value = strings.clone(strings.to_string(sb))
+		value = strings.clone(strings.to_string(sb)) // TODO: Reference counting of runtime values
 	case Value:
 		value = expr.(Value)
 	case NameReference:

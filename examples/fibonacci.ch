@@ -6,5 +6,4 @@ func fib(n int) -> int {
 }
 
 let n = 6
-// print(f"{n}th number of the fibonacci sequence: {fib(n)}")
-print(n, "\bth number of the fibonacci sequence:", fib(n))
+print(f"{n}th number of the fibonacci sequence: {fib(n)}")
