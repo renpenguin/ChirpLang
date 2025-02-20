@@ -9,7 +9,7 @@ InterpretedFunction :: struct {
 }
 
 // Error returned by external functions in case of an error with the input values
-BuiltInFunctionError :: struct {
+FunctionError :: struct {
 	msg: string,
 	ok:  bool,
 }
@@ -17,7 +17,7 @@ BuiltInFunctionError :: struct {
 // Holds a pointer to an Odin function
 BuiltInFunction :: struct {
 	name:     p.NameDefinition,
-	func_ref: #type proc(args: [dynamic]p.Value) -> (return_value: p.Value, err: BuiltInFunctionError),
+	func_ref: #type proc(args: [dynamic]p.Value) -> (return_value: p.Value, err: FunctionError),
 }
 
 Function :: union {

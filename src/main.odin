@@ -59,8 +59,8 @@ run :: proc(input: string) {
 			fmt.eprintln("Type error", err.(execute.TypeError))
 		case execute.StackOverflow:
 			fmt.eprintfln("Stack overflow error calling %s()", err.(execute.StackOverflow))
-		case scope.BuiltInFunctionError:
-			fmt.eprintln("C function error", err.(scope.BuiltInFunctionError))
+		case scope.FunctionError:
+			fmt.eprintln("C function error", err.(scope.FunctionError))
 		case execute.NoError:
 			panic("Unreachable")
 		}

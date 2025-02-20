@@ -19,7 +19,7 @@ StackOverflow :: p.NameDefinition
 RuntimeError :: union #no_nil {
 	TypeError,
 	StackOverflow,
-	s.BuiltInFunctionError,
+	s.FunctionError,
 	NoError,
 }
 
@@ -29,8 +29,8 @@ is_runtime_error_ok :: proc(err: RuntimeError) -> bool {
 		return err.(TypeError).ok
 	case StackOverflow:
 		return err.(StackOverflow) == ""
-	case s.BuiltInFunctionError:
-		return err.(s.BuiltInFunctionError).ok
+	case s.FunctionError:
+		return err.(s.FunctionError).ok
 	case NoError:
 		return true
 	case:

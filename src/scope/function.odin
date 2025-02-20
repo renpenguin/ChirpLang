@@ -7,7 +7,7 @@ import d "./definitions"
 InterpretedFunction :: d.InterpretedFunction
 
 // Error returned by external functions in case of an error with the input values
-BuiltInFunctionError :: d.BuiltInFunctionError
+FunctionError :: d.FunctionError
 // Holds a pointer to an Odin function
 BuiltInFunction :: d.BuiltInFunction
 

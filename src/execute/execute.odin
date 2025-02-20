@@ -212,12 +212,12 @@ call_function :: proc(
 		defer s.destroy_scope(func_scope)
 		func_scope.parent_scope = interp_func_def.parent_scope
 
-		if len(interp_func_def.args) != len(func_call.args) do return p.None, s.BuiltInFunctionError{msg = "Incorrect number of arguments passed to function call"}
+		if len(interp_func_def.args) != len(func_call.args) do return p.None, s.FunctionError{msg = "Incorrect number of arguments passed to function call"}
 		for def_arg, i in interp_func_def.args {
 			passed_arg: p.Value
 			passed_arg, err = execute_expression(func_call.args[i], scope)
 			if !is_runtime_error_ok(err) do return
-			if def_arg.type != p.get_value_type(passed_arg) do return p.None, s.BuiltInFunctionError{msg = "Incorrect argument type"}
+			if def_arg.type != p.get_value_type(passed_arg) do return p.None, s.FunctionError{msg = "Incorrect argument type"}
 
 			append(&func_scope.constants, s.Variable{def_arg.name, passed_arg, false})
 		}

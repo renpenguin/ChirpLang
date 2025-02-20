@@ -4,7 +4,7 @@ import p "../../parser"
 import d "../definitions"
 
 @(private)
-FuncError :: d.BuiltInFunctionError
+FuncError :: d.FunctionError
 
 try_access_library :: proc(lib_ref: p.NameReference) -> (lib: d.Module, ok: bool) {
 	if lib_ref.path != nil do return // TODO: import lines shouldn't try to have paths for now
