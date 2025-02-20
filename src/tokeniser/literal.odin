@@ -72,37 +72,41 @@ try_match_to_literal :: proc(input_chars: []rune, char_index: ^int) -> (literal:
 
 @(private = "file")
 try_match_to_number :: proc(input_chars: []rune, char_index: ^int) -> (literal: Literal, ok: bool) {
+	unit := input_chars[char_index^] == '-' ? -1 : 1
+	if unit < 0 do char_index^ += 1
+
 	c := input_chars[char_index^]
-
-	if unicode.is_number(c) { 	// TODO: handle negative numbers
-		number_literal := int(c) - 48
-
-		for j := char_index^ + 1; j < len(input_chars); j += 1 {
-			c := input_chars[j]
-			if !unicode.is_number(c) do break
-
-			number_literal *= 10
-			number_literal += (int(c) - 48) // Unicode offset
-			char_index^ += 1
-		}
-		if (char_index^ + 1) >= len(input_chars) do return Literal(number_literal), true // EOF
-		if input_chars[char_index^ + 1] != '.' do return Literal(number_literal), true // Guard for float parsing
-
-		// Float
-		char_index^ += 1
-		float_literal := float(number_literal)
-		multiplier := 1.0
-		for j := char_index^ + 1; j < len(input_chars); j += 1 {
-			c := input_chars[j]
-			if !unicode.is_number(c) do break
-
-			char_index^ += 1
-			multiplier /= 10
-			float_literal += multiplier * float(int(c) - 48) // Unicode offset
-		}
-
-		return Literal(float_literal), true
+	if !unicode.is_number(c) {
+		if unit < 0 do char_index^ -= 1
+		return
 	}
 
-	return
+	// Int
+	number_literal := int(c) - 48
+	for j := char_index^ + 1; j < len(input_chars); j += 1 {
+		c := input_chars[j]
+		if !unicode.is_number(c) do break
+
+		number_literal *= 10
+		number_literal += (int(c) - 48) // Unicode offset
+		char_index^ += 1
+	}
+	if (char_index^ + 1) >= len(input_chars) || input_chars[char_index^ + 1] != '.' {
+		return Literal(unit * number_literal), true
+	}
+
+	// Float
+	char_index^ += 1
+	float_literal := float(number_literal)
+	multiplier := 1.0
+	for j := char_index^ + 1; j < len(input_chars); j += 1 {
+		c := input_chars[j]
+		if !unicode.is_number(c) do break
+
+		char_index^ += 1
+		multiplier /= 10
+		float_literal += multiplier * float(int(c) - 48) // Unicode offset
+	}
+
+	return Literal(float(unit) * float_literal), true
 }

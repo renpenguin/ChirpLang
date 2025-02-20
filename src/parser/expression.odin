@@ -70,8 +70,14 @@ build_expression :: proc(tokens: t.TokenStream) -> (expr: Expression, err := Syn
 				return Value(None), SyntaxError{msg = "Invalid expression: operator follows other operator"}
 			// Combine expressions into operation
 			case .None:
-				// TODO: handle Neg and Not here
-				return Value(None), SyntaxError{msg = "Invalid expression: operator does not follow expression "}
+				if arith_op == .Not {
+					panic("todo") // TODO: implement ! operator, making sure that placing it between parts is invalid
+				} else if arith_op == .Sub {
+					expr = Value(int(0))
+					stored_operator = .Sub
+				} else {
+					return Value(None), SyntaxError{msg = "Invalid expression: operator does not follow expression "}
+				}
 			}
 
 			continue
